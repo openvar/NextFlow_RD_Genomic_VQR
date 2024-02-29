@@ -29,6 +29,11 @@ process baseRecalibrator {
 
     echo "Genome File: \${genomeFasta}"
 
+    # Rename the dictionary file to the expected name if it exists
+    if [[ -e "\${genomeFasta}.dict" ]]; then
+        mv "\${genomeFasta}.dict" "\${genomeFasta%.*}.dict"
+    fi
+
     # Generate recalibration table for the input BAM file
     gatk --java-options "-Xmx8G" BaseRecalibrator \
         -R "\${genomeFasta}" \
