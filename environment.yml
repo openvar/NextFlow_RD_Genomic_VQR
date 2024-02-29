@@ -1,5 +1,5 @@
 name:
-  NextFlow_Gen_RD
+  NextFlow_Gen_RD_QR
 channels:
   - bioconda
   - conda-forge

@@ -110,7 +110,7 @@ If `(file)` given for parameter (i.e., the input is of the 'file' class),
 
 If `(string)` given for parameter (usually used for folder paths; the input is of the 'string' class),
  use `dx://project-GfKZFYXKFxQz8GgXjx3xBP1P:/path/to/folder` e.g. 
-`-iraw=-igenome_index_files=dx://project-GfKZFYXKFxQz8GgXjx3xBP1P:/data/genome` 
+`-iraw=-igenome_index_files=dx://project-GfKZFYXKFxQz8GgXjx3xBP1P:/data/genome/*.{fasta,fasta.*}` 
 
 For more information see the [documentation on specifying inputs and outputs to nextflow DNAnexus applets ](https://documentation.dnanexus.com/user/running-apps-and-workflows/running-nextflow-pipelines#nextflow-pipeline-executable-inputs-and-outputs)
 
