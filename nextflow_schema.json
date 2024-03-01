@@ -22,6 +22,11 @@
                     "description": "Genome index files directory",
                     "format": "directory-path"
                 },
+                "qsrVcfs": {
+                    "type": "string",
+                    "description": "Quality Score Recalibration files directory",
+                    "format": "directory-path"
+                },
                 "index_genome": {
                     "type": "boolean",
                     "description": "Index the genome",
