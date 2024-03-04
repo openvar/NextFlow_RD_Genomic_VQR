@@ -42,6 +42,10 @@ workflow {
         indexed_genome_ch.view()
     }
 
+    // Create qsrc_vcf_ch channel
+    qsrc_vcf_ch = Channel.fromPath(params.qsrVcfs)
+    qsrc_vcf_ch.view()
+
     // Set channel to gather read_pairs
     read_pairs_ch = Channel
         .fromPath(params.samplesheet)
@@ -75,16 +79,16 @@ workflow {
     // Changed indexBam to output sample_id, bam, bai file in tuple so that correct bai file stays with bamfile
     indexed_bam_ch = indexBam(mark_ch)
 
-    // Create a channel from qsrVcfs. The process ceates a text file with the paths to the vcf files
+    // Create a channel from qsrVcfs. The process creates a text file with the paths to the vcf files
     knownSites_ch = Channel
         .fromPath(params.qsrVcfs)
-        .map { file -> return "--known-sites ${file}" }
+        .filter { file -> file.getBaseName().endsWith('.vcf') }
+        .map { file -> return "--known-sites " + file.getBaseName() }
         .collect()
     knownSites_ch.view()
 
     // Run BQSR on indexed BAM files
-    bqsr_ch = baseRecalibrator(indexed_bam_ch, knownSites_ch, indexed_genome_ch.collect())
-
+    bqsr_ch = baseRecalibrator(indexed_bam_ch, knownSites_ch, indexed_genome_ch.collect(), qsrc_vcf_ch.collect())
 
     // Call Variants
     // Removed collect from vcf bam ch

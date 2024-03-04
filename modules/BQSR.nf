@@ -12,6 +12,7 @@ process baseRecalibrator {
     tuple val(sample_id), file(bamFile), file(baiFile)
     val knownSites
     path indexFiles
+    path qsrcVcfFiles
 
     output:
     tuple val(sample_id), file("${bamFile.baseName}_recalibrated.bam"), file("${bamFile.baseName}_recalibrated.bai")
