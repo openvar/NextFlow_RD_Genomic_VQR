@@ -3,7 +3,7 @@
  */
 process downsampleBam {
 
-    label 'process_single'
+    label 'process_medium'
     container 'variantvalidator/indexgenome:1.1.0'
 
     tag "bamfile: $bamFile; fraction: $fraction"
