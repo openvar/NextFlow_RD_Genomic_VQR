@@ -25,7 +25,8 @@ include { markDuplicates } from './modules/markDuplicates'
 include { indexBam } from './modules/indexBam'
 include { baseRecalibrator } from './modules/BQSR'
 include { haplotypeCaller } from './modules/haplotypeCaller'
-include { filterVCF } from './modules/filterVCF'
+include { variantRecalibrator } from './modules/variantRecalibrator'
+
 
 workflow {
     // Create a fractions channel
@@ -35,16 +36,16 @@ workflow {
     if (params.index_genome){
         // Flatten as is of format [fasta, [rest of files..]]
         indexed_genome_ch = indexGenome(params.genome_file).flatten()
-        indexed_genome_ch.view()
+        // indexed_genome_ch.view()
     }
     else {
         indexed_genome_ch = Channel.fromPath(params.genome_index_files)
-        indexed_genome_ch.view()
+        // indexed_genome_ch.view()
     }
 
     // Create qsrc_vcf_ch channel
     qsrc_vcf_ch = Channel.fromPath(params.qsrVcfs)
-    qsrc_vcf_ch.view()
+    // qsrc_vcf_ch.view()
 
     // Set channel to gather read_pairs
     read_pairs_ch = Channel
@@ -82,7 +83,7 @@ workflow {
     // Create a channel from qsrVcfs. The process creates a text file with the paths to the vcf files
     knownSites_ch = Channel
         .fromPath(params.qsrVcfs)
-        .filter { file -> file.getBaseName().endsWith('.vcf') }
+        .filter { file -> file.getName().endsWith('.vcf.idx') }
         .map { file -> return "--known-sites " + file.getBaseName() }
         .collect()
     knownSites_ch.view()
@@ -96,10 +97,33 @@ workflow {
     // Replaced params.genome_index_files with indexed_genome_ch
     vcf_call_ch = haplotypeCaller(bqsr_ch, indexed_genome_ch.collect())
 
-    // Filter Variants
-    // Removed collect from vcf channel
-    // Replaced params.genome_index_files with indexed_genome_ch
-    filterVCF(vcf_call_ch, indexed_genome_ch.collect())
+    // Define a map of VCF files to resource options
+    def resourceOptions = [
+        'Homo_sapiens_assembly38.known_indels': '--resource:dbsnp,known=true,training=false,truth=false,prior=15.0',
+        'hapmap_3.3.hg38': '--resource:hapmap,known=false,training=false,truth=true,prior=15.0',
+        '1000G_omni2.5.hg38': '--resource:omni,known=false,training=true,truth=false,prior=12.0',
+        '1000G_phase1.snps.high_confidence.hg38': '--resource:1000G,known=true,training=true,truth=true,prior=10.0',
+        'Homo_sapiens_assembly38.dbsnp138': '--resource:dbsnp,known=true,training=false,truth=false,prior=2.0'
+    ]
+
+    knownSitesArgs_ch = Channel
+        .fromPath(params.qsrVcfs)
+        .map { file -> return file }
+        .filter { file -> file.getName().endsWith('.vcf') }
+        .map { file ->
+            def basename = file.getBaseName()
+            if (resourceOptions.containsKey(basename)) {
+                return resourceOptions[basename.replace('.vcf', '')] + " ./" + basename + ".vcf"
+            } else {
+                return null
+            }
+        }
+        .filter { it != null }
+        .collect()
+    knownSitesArgs_ch.view()
+
+    // Apply Variant Recalibration
+    variantRecalibrator(vcf_call_ch, knownSitesArgs_ch, indexed_genome_ch.collect(), qsrc_vcf_ch.collect())
 }
 
 workflow.onComplete {

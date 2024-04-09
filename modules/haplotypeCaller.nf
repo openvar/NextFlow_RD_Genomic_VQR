@@ -34,8 +34,11 @@ process haplotypeCaller {
 
     outputVcf="\$(basename ${bamFile} _dedup.bam).vcf"
 
-    # Use GATK HaplotypeCaller to call variants
-    gatk HaplotypeCaller -R "\${genomeFasta}" -I ${bamFile} -O "\${outputVcf}"
+    # Use GATK HaplotypeCaller to call variants with specified annotations
+    gatk HaplotypeCaller -R "\${genomeFasta}" -I ${bamFile} -O "\${outputVcf}" \
+        -A BaseQuality -A DepthPerSampleHC -A MappingQuality -A QualByDepth \
+        -A MappingQualityRankSumTest -A ReadPosRankSumTest -A FisherStrand -A StrandOddsRatio \
+        -A MappingQualityZero -A InbreedingCoeff -A BaseQualityRankSumTest -A HaplotypeFilteringAnnotation
 
     echo "Sample: ${sample_id} VCF: \${outputVcf}"
 
