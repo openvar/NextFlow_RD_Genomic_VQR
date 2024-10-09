@@ -1,12 +1,12 @@
 /*
  * Align reads to the indexed genome
  */
-process alignReads {
+process alignReadsBwaMem {
 
     label 'process_medium'
     container 'variantvalidator/indexgenome:1.1.0'
      
-    tag "$sample_id"
+    tag "alignReadsBwaMem"
     
     input:
     tuple val(sample_id), path(reads)

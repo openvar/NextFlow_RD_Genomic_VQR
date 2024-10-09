@@ -18,7 +18,7 @@ log.info """\
 // Include modules in sequence
 include { indexGenome } from './modules/indexGenome'
 include { FASTQC } from './modules/FASTQC'
-include { alignReads } from './modules/alignReads'
+include { alignReadsBwaMem } from './modules/alignReadsBwaMem'
 include { downsampleBam } from './modules/downsampleBam'
 include { sortBam } from './modules/sortBam'
 include { markDuplicates } from './modules/markDuplicates'
@@ -36,16 +36,13 @@ workflow {
     if (params.index_genome){
         // Flatten as is of format [fasta, [rest of files..]]
         indexed_genome_ch = indexGenome(params.genome_file).flatten()
-        // indexed_genome_ch.view()
     }
     else {
         indexed_genome_ch = Channel.fromPath(params.genome_index_files)
-        // indexed_genome_ch.view()
     }
 
     // Create qsrc_vcf_ch channel
     qsrc_vcf_ch = Channel.fromPath(params.qsrVcfs)
-    // qsrc_vcf_ch.view()
 
     // Set channel to gather read_pairs
     read_pairs_ch = Channel
@@ -58,29 +55,34 @@ workflow {
     FASTQC(read_pairs_ch)
 
     // Align reads to the indexed genome
-    // Added index_genome_ch channel to make it wait for index if one not already created
-    align_ch = alignReads(read_pairs_ch, indexed_genome_ch.collect())
+    align_ch = alignReadsBwaMem(read_pairs_ch, indexed_genome_ch.collect())
+    align_ch.view()
 
-    // Downsample BAM files
-    // First combine fractions with bam channel
-    // This means every downsample process will get its own instance so downsampling can run in parallel
-    bam_fracs_ch = fractions_ch.combine(align_ch)
-    downsample_ch = downsampleBam(bam_fracs_ch)
+    // Conditionally downsample BAM files
+    if (params.downsample_bam) {
+        // Combine fractions with bam channel
+        bam_fracs_ch = fractions_ch.combine(align_ch)
+        downsample_ch = downsampleBam(bam_fracs_ch)
 
-    // Sort BAM files
-    // Removed collect to run sorting in parallel
-    sort_ch = sortBam(downsample_ch)
+        // Sort BAM files
+        sort_ch = sortBam(downsample_ch)
+    } else {
+        // If downsampling is disabled, directly sort the aligned BAM files
+        sort_ch = align_ch.map { bamFile ->
+            def sample_id = bamFile.getBaseName().split('_')[0]
+            return tuple(sample_id, bamFile)
+        }
+        sort_ch = sortBam(sort_ch)
+    }
 
     // Mark duplicates in BAM files
-    // Removed collect to run sorting in parallel
+    sort_ch.view()
     mark_ch = markDuplicates(sort_ch)
 
     // Index the BAM files and collect the output channel
-    // Removed collect to run sorting in parallel
-    // Changed indexBam to output sample_id, bam, bai file in tuple so that correct bai file stays with bamfile
     indexed_bam_ch = indexBam(mark_ch)
 
-    // Create a channel from qsrVcfs. The process creates a text file with the paths to the vcf files
+    // Create a channel from qsrVcfs
     knownSites_ch = Channel
         .fromPath(params.qsrVcfs)
         .filter { file -> file.getName().endsWith('.vcf.idx') }
@@ -92,14 +94,11 @@ workflow {
     bqsr_ch = baseRecalibrator(indexed_bam_ch, knownSites_ch, indexed_genome_ch.collect(), qsrc_vcf_ch.collect())
 
     // Call Variants
-    // Removed collect from vcf bam ch
-    // Altered haplotype caller to take in the index bam ch
-    // Replaced params.genome_index_files with indexed_genome_ch
     vcf_call_ch = haplotypeCaller(bqsr_ch, indexed_genome_ch.collect())
 
     // Define a map of VCF files to resource options
     def resourceOptions = [
-        'Homo_sapiens_assembly38.known_indels': '--resource:dbsnp,known=true,training=false,truth=false,prior=15.0',
+        'Homo_sapiens_assembly38.known_indels': '--resource:dbsnp_indels,known=true,training=false,truth=false,prior=15.0',
         'hapmap_3.3.hg38': '--resource:hapmap,known=false,training=false,truth=true,prior=15.0',
         '1000G_omni2.5.hg38': '--resource:omni,known=false,training=true,truth=false,prior=12.0',
         '1000G_phase1.snps.high_confidence.hg38': '--resource:1000G,known=true,training=true,truth=true,prior=10.0',

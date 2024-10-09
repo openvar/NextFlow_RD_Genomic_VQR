@@ -1,7 +1,7 @@
 process baseRecalibrator {
 
     label 'process_medium'
-    container 'broadinstitute/gatk:4.1.4.0'
+    container 'variantvalidator/gatk4:4.3.0.0'
 
     tag "$bamFile"
 

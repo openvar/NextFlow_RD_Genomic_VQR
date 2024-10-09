@@ -8,9 +8,10 @@ RUN conda init bash && \
     echo "conda activate base" > ~/.bashrc && \
     conda config --add channels bioconda && \
     conda config --add channels conda-forge && \
-    conda install -y \
-        gatk4==4.3.0.0 && \
-    conda clean --all -f -y
+    conda install -y gatk4==4.3.0.0 && \
+    conda clean --all -f -y && \
+    apt-get update && \
+    apt-get install -y samtools=1.11-1
 
 # Metadata indicating the author or maintainer of the image
 LABEL maintainer="Peter J Freeman <peter.j.freeman@manchester.ac.uk>"

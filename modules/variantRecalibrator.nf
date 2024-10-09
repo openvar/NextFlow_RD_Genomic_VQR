@@ -43,7 +43,7 @@ process variantRecalibrator {
         -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR \
         -mode SNP \
         -tranches-file ${vcf.baseName}.recalibrated_SNP.tranches \
-        -O ${vcf.baseName}.recalibrated_SNP.vcf
+        -O ${vcf.baseName}.recalibrated_SNP.recal
 
     # Apply VQSR for SNPs
     gatk ApplyVQSR \
@@ -63,7 +63,7 @@ process variantRecalibrator {
         -an QD -an DP -an FS -an SOR -an ReadPosRankSum -an MQRankSum \
         -mode INDEL \
         -tranches-file ${vcf.baseName}.recalibrated_INDEL.tranches \
-        -O ${vcf.baseName}.recalibrated_INDEL.vcf
+        -O ${vcf.baseName}.recalibrated_INDEL.recal
 
     # Apply VQSR for indels
     gatk ApplyVQSR \

@@ -12,7 +12,7 @@ process sortBam {
     tuple val(sample_id), file(bamFile)
 
     output:
-    tuple val(sample_id), file("${sample_id}_*_sorted.bam")
+    tuple val(sample_id), file("${bamFile.baseName}_sorted.bam")
 
     script:
     """
