@@ -75,7 +75,7 @@ process mergeVCFs {
     """
 }
 
-process GenotypeGVCFs {
+process genotypeGVCFs {
     label 'process_medium'
     container 'variantvalidator/gatk4:4.3.0.0'
 

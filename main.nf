@@ -15,12 +15,17 @@ log.info """\
     aligner         : ${params.aligner}
     read_trim       : ${params.read_trimming}
     variant_recalibration: ${params.variant_recalibration}
+    identity_analysis: ${params.identity_analysis}
     ============================================
 """.stripIndent()
 
-// Include modules in sequence
-include { indexGenome } from './modules/indexGenome'
-include { leehom } from './modules/leehom'
+// Conditionally include modules
+if (params.index_genome) {
+    include { indexGenome } from './modules/indexGenome'
+}
+if (params.read_trimming) {
+    include { leehom } from './modules/leehom'
+}
 include { FASTQC } from './modules/FASTQC'
 include { sortBam } from './modules/sortBam'
 include { markDuplicates } from './modules/markDuplicates'
@@ -28,8 +33,15 @@ include { indexBam } from './modules/indexBam'
 include { baseRecalibrator } from './modules/BQSR'
 include { haplotypeCaller } from './modules/haplotypeCaller'
 include { mergeVCFs } from './modules/haplotypeCaller'
-include { GenotypeGVCFs } from './modules/haplotypeCaller' // Include GenotypeGVCFs process
-include { variantRecalibrator } from './modules/variantRecalibrator'
+include { genotypeGVCFs } from './modules/haplotypeCaller' // Include GenotypeGVCFs process
+if (params.variant_recalibration) {
+    include { variantRecalibrator } from './modules/variantRecalibrator'
+} else {
+    include { filterVCF } from './modules/filterVCF'
+}
+if (params.identity_analysis) {
+    include { identityAnalysis } from './modules/identityAnalysis'
+}
 
 // Conditionally include the alignment process based on the aligner parameter
 if (params.aligner == 'bwa-mem') {
@@ -127,9 +139,15 @@ workflow {
 
         filtered_vcf_ch = variantRecalibrator(final_vcf_ch, knownSitesArgs_ch, indexed_genome_ch.collect(), qsrc_vcf_ch.collect())
     } else {
-        filtered_vcf_ch = filterVCF(final_vcf_ch)
+        filtered_vcf_ch = filterVCF(final_vcf_ch, indexed_genome_ch.collect())
     }
     filtered_vcf_ch.view() // View final VCF files after filtering or recalibration
+
+    // Conditionally run identityAnalysis if identity_analysis is true
+    if (params.identity_analysis) {
+        identity_analysis_ch = identityAnalysis(final_vcf_ch)
+        identity_analysis_ch.view()
+    }
 }
 
 workflow FASTQC_only {
@@ -144,4 +162,3 @@ workflow FASTQC_only {
 workflow.onComplete {
     log.info ( workflow.success ? "\nworkflow is done!\n" : "Oops .. something went wrong" )
 }
-
