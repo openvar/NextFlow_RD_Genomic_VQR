@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/YOUR_PIPELINE/master/nextflow_schema.json",
+    "$id": "https://raw.githubusercontent.com/openvar/NextFlow_RD_Genomic_VQR/main/nextflow_schema.json",
     "title": "Nextflow pipeline parameters",
-    "description": "This pipeline uses Nextflow and processes some kind of data. The JSON Schema was built using the nf-core pipeline schema builder.",
+    "description": "This pipeline uses Nextflow and processes exome or genome data. The JSON Schema was built using the nf-core pipeline schema builder.",
     "type": "object",
     "definitions": {
         "inputs_outputs": {
@@ -43,6 +43,40 @@
                     "description": "local output directory",
                     "default": "./results",
                     "format": "directory-path"
+                },
+                "aligner": {
+                    "type": "string",
+                    "description": "Aligner to use (bwa-mem or bwa-aln)",
+                    "default": "bwa-mem",
+                    "enum": ["bwa-mem", "bwa-aln"]
+                },
+                "read_trimming": {
+                    "type": "boolean",
+                    "description": "Flag to indicate if read trimming should be performed",
+                    "default": false
+                },
+                "variant_recalibration": {
+                    "type": "boolean",
+                    "description": "Flag to indicate if variant recalibration should be performed",
+                    "default": false
+                },
+                "identity_analysis": {
+                    "type": "boolean",
+                    "description": "Flag to indicate if identity analysis should be performed",
+                    "default": false
+                },
+                "chromosomes_list": {
+                    "type": "array",
+                    "description": "List of chromosomes to analyze",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        "chr1", "chr2", "chr3", "chr4", "chr5", "chr6",
+                        "chr7", "chr8", "chr9", "chr10", "chr11", "chr12",
+                        "chr13", "chr14", "chr15", "chr16", "chr17", "chr18",
+                        "chr19", "chr20", "chr21", "chr22", "chrX", "chrY", "chrM"
+                    ]
                 }
             },
             "required": [
@@ -50,7 +84,8 @@
                 "genome_index_files",
                 "index_genome",
                 "genome_file",
-                "outdir"
+                "outdir",
+                "aligner"
             ]
         }
     },
