@@ -1,11 +1,8 @@
-/*
- * Filter the raw VCF files using GATK VariantFiltration
- */
 process filterVCF {
 
     label 'process_medium'
     container 'variantvalidator/gatk4:4.3.0.0'
-    
+
     tag "$vcfFile"
 
     // Publish VCF files to the specified directory
@@ -33,7 +30,9 @@ process filterVCF {
     outputVcf="\$(basename ${vcfFile} .vcf).filtered.vcf"
 
     # Use GATK VariantFiltration to filter the input VCF file
-    gatk VariantFiltration -R "\${genomeFasta}" -V "${vcfFile}" -O "\${outputVcf}"
+    gatk VariantFiltration -R "\${genomeFasta}" -V "${vcfFile}" -O "\${outputVcf}" \
+        --filter-expression "QD < 2.0" --filter-name "LowQD" \
+        --filter-expression "DP < 2" --filter-name "LowCoverage"
 
     # Print a message indicating the completion of variant filtration for the current sample
     echo "Variant Filtering for Sample: ${vcfFile} Complete"
