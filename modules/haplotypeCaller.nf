@@ -18,7 +18,7 @@ process haplotypeCaller {
     """
     echo "Running HaplotypeCaller for Sample: ${bamFile}"
 
-    if [[ -n params.genome_file ]]; then
+    if [[ -n ${params.genome_file} ]]; then
         genomeFasta=\$(basename ${params.genome_file})
     else
         genomeFasta=\$(find -L . -name '*.fasta')
@@ -48,57 +48,71 @@ process haplotypeCaller {
     """
 }
 
-process mergeVCFs {
+process combineGVCFs {
     label 'process_medium'
     container 'variantvalidator/gatk4:4.3.0.0'
+    tag "${sample_ids.join('_')}" // Add a tag based on the sample IDs
 
     input:
     tuple val(sample_ids), path(gvcf_files), path(gvcf_index_files)
+    path indexFiles
 
     output:
-    tuple val(merged_sample_id), path("${merged_sample_id}.db")
+    tuple val("${sample_ids.join('_')}"), file("*_combined.vcf")
 
     script:
-    def merged_sample_id = sample_ids.join('_')
-    def vcf_files_args = gvcf_files.collect { file -> "-V ${file}" }.join(' ')
-    def chromosome_args = params.chromosomes_list.collect { "-L ${it}" }.join(' ')
+    def merged_sample_id = "${sample_ids.join('_')}"
+    def gvcf_files_args = gvcf_files.collect { file -> "-V ${file}" }.join(' ')
 
     """
-    echo "Merging VCFs for samples: ${gvcf_files.collect { it.baseName }.join(', ')}"
+    echo "Combining GVCFs for samples: ${gvcf_files.collect { it.baseName }.join(', ')}"
 
-    gatk GenomicsDBImport --genomicsdb-workspace-path ${merged_sample_id}.db \
-        ${vcf_files_args} \
-        ${chromosome_args} \
-        --reader-threads ${task.cpus}
+    genomeFasta="\$(find -L . -name '*.fasta')"
 
-    echo "VCF merge complete for samples: ${gvcf_files.collect { it.baseName }.join(', ')}"
+    # Ensure dictionary exists
+    if [[ -e "\${genomeFasta}.dict" ]]; then
+        mv "\${genomeFasta}.dict" "\${genomeFasta%.*}.dict"
+    fi
+
+    gatk CombineGVCFs -R "\${genomeFasta}"\
+        ${gvcf_files_args} \
+        -O ${merged_sample_id}_combined.vcf
     """
 }
 
 process genotypeGVCFs {
     label 'process_medium'
     container 'variantvalidator/gatk4:4.3.0.0'
+    tag "$combined_sample_id"
 
     input:
-    tuple val(sample_id), path(gvcfFile) // Using path for merged GVCF files
+    tuple val(combined_sample_id), file(combined_gvcf)
+    path indexFiles
 
     output:
-    tuple val(sample_id), file("${sample_id}.vcf")
+    tuple val(combined_sample_id), file("*_genotyped.vcf")
 
     script:
-    def outputVcf = "${sample_id}.vcf"
-    """
-    echo "Genotyping GVCF for Sample: ${gvcfFile}"
+    def merged_sample_id = combined_gvcf.baseName.replace('_combined.g.vcf', '')
 
-    genomeFasta="\$(find -L . -name '*.fasta')"
+    """
+    echo "Genotyping combined GVCF: ${combined_gvcf.baseName}"
+
+    if [[ -n ${params.genome_file} ]]; then
+        genomeFasta=\$(basename ${params.genome_file})
+    else
+        genomeFasta=\$(find -L . -name '*.fasta')
+    fi
+
+    echo "Genome File: \${genomeFasta}"
 
     # Rename the dictionary file to the expected name if it exists
     if [[ -e "\${genomeFasta}.dict" ]]; then
         mv "\${genomeFasta}.dict" "\${genomeFasta%.*}.dict"
     fi
 
-    gatk GenotypeGVCFs -R "\${genomeFasta}" -V ${gvcfFile} -O ${outputVcf}
-
-    echo "Genotyping complete: ${outputVcf}"
+    gatk GenotypeGVCFs -R "\${genomeFasta}" \
+        -V ${combined_gvcf} \
+        -O ${merged_sample_id}_genotyped.vcf
     """
 }

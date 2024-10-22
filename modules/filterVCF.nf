@@ -1,5 +1,4 @@
 process filterVCF {
-
     label 'process_medium'
     container 'variantvalidator/gatk4:4.3.0.0'
 
@@ -14,7 +13,7 @@ process filterVCF {
 
     // Output channel for sample_id and filtered VCF files
     output:
-    tuple val(sample_id), file("*.vcf")
+    tuple val(sample_id), file("*_filtered.vcf")
 
     // Script section to run the process
     script:
@@ -27,7 +26,8 @@ process filterVCF {
     # Rename the dictionary file to the expected name
     mv "\${genomeFasta}.dict" "\${genomeFasta%.*}.dict"
 
-    outputVcf="\$(basename ${vcfFile} .vcf).filtered.vcf"
+    # Set output VCF filename with _filtered.vcf instead of .filtered.vcf
+    outputVcf="\$(basename ${vcfFile} .vcf)_filtered.vcf"
 
     # Use GATK VariantFiltration to filter the input VCF file
     gatk VariantFiltration -R "\${genomeFasta}" -V "${vcfFile}" -O "\${outputVcf}" \

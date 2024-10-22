@@ -26,8 +26,7 @@ process alignReadsBwaMem {
     # Align reads using BWA and generate BAM file
     bwa mem -M -B 3 -O 6 -E 1 -k 17 -w 120 -T 20 -t ${task.cpus} \$INDEX ${reads[0]} ${reads[1]} |
     samtools view -b - |
-    samtools addreplacerg -r "@RG\\tID:${sample_id}_1.fastq\\tSM:${sample_id}_2.fastq\\tPL:illumina" - |
-    samtools addreplacerg -r "@RG\\tID:${sample_id}_2.fastq\\tSM:${sample_id}_1.fastq\\tPL:illumina" - > ${sample_id}.bam
+    samtools addreplacerg -r "@RG\\tID:${sample_id}\\tSM:${sample_id}\\tPL:illumina" - > ${sample_id}.bam
     echo "Alignment complete"
     """
 }

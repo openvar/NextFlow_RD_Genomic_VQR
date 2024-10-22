@@ -4,7 +4,7 @@
 process leehom {
 
     label 'process_medium'
-    container 'quay.io/biocontainers/leehom:1.2.15--hdc46a4b_6'
+    container 'variantvalidator/leehom:0.0.1'
 
     tag "$sample_id"
 
@@ -20,8 +20,14 @@ process leehom {
 
     outputFastq="${sample_id}_leehom.fastq"
 
-    # Run leehom on the input FASTQ files
-    leehom --no-align -i ${reads[0]} -I ${reads[1]} -o \${outputFastq}
+    # Check if degraded DNA flag is set and adjust leehom command accordingly
+    if [ "${params.degraded_dna}" == "true" ]; then
+        echo "Using aDNA enhancements for degraded DNA."
+        leehom --no-align --ancient --fragadapter -i ${reads[0]} -I ${reads[1]} -o \${outputFastq}
+    else
+        echo "Running leehom without aDNA enhancements."
+        leehom --no-align -i ${reads[0]} -I ${reads[1]} -o \${outputFastq}
+    fi
 
     echo "Sample: ${sample_id} leehom output: \${outputFastq}"
 
