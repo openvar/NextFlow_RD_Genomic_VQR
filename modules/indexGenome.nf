@@ -4,7 +4,7 @@
  */
 process indexGenome {
 
-    label 'process_high'
+    label 'process_low'
     container 'variantvalidator/indexgenome:1.1.0'
 
 

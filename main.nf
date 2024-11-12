@@ -12,8 +12,9 @@ log.info """\
     index genome    : ${params.index_genome}
     qsr truth vcfs  : ${params.qsrVcfs}
     output directory: ${params.outdir}
+    fastqc          : ${params.fastqc}
     aligner         : ${params.aligner}
-    read_trim       : ${params.read_trimming}
+    bgsr            : ${params.bqsr}
     degraded_dna    : ${params.degraded_dna}
     variant_recalibration: ${params.variant_recalibration}
     identity_analysis: ${params.identity_analysis}
@@ -24,14 +25,15 @@ log.info """\
 if (params.index_genome) {
     include { indexGenome } from './modules/indexGenome'
 }
-if (params.read_trimming) {
-    include { leehom } from './modules/leehom'
+if (params.fastqc) {
+    include { FASTQC } from './modules/FASTQC'
 }
-include { FASTQC } from './modules/FASTQC'
 include { sortBam } from './modules/sortBam'
 include { markDuplicates } from './modules/markDuplicates'
 include { indexBam } from './modules/indexBam'
-include { baseRecalibrator } from './modules/BQSR'
+if (params.bqsr) {
+    include { baseRecalibrator } from './modules/BQSR'
+}
 include { haplotypeCaller } from './modules/haplotypeCaller'
 include { combineGVCFs } from './modules/haplotypeCaller'
 include { genotypeGVCFs } from './modules/haplotypeCaller'
@@ -43,8 +45,6 @@ if (params.variant_recalibration) {
 if (params.identity_analysis) {
     include { identityAnalysis } from './modules/identityAnalysis'
 }
-
-// Conditionally include the alignment process based on the aligner parameter
 if (params.aligner == 'bwa-mem') {
     include { alignReadsBwaMem } from './modules/alignReadsBwaMem'
 } else if (params.aligner == 'bwa-aln') {
@@ -52,8 +52,13 @@ if (params.aligner == 'bwa-mem') {
 } else {
     error "Unsupported aligner: ${params.aligner}. Please specify 'bwa-mem' or 'bwa-aln'."
 }
+if (params.degraded_dna) {
+    include { mapDamage2 } from './modules/mapDamage'
+    include { indexMapDamageBam } from './modules/indexBam'
+}
 
 workflow {
+
     // User decides to index genome or not
     if (params.index_genome){
         // Flatten as is of format [fasta, [rest of files..]]
@@ -70,25 +75,27 @@ workflow {
     read_pairs_ch = Channel
         .fromPath(params.samplesheet)
         .splitCsv(sep: '\t')
-        .map { row -> tuple(row[0], [row[1], row[2]]) }
+        .map { row ->
+            if (row.size() == 4) {
+                tuple(row[0], [row[1], row[2]])
+            } else if (row.size() == 3) {
+                tuple(row[0], [row[1]])
+            } else {
+                error "Unexpected row format in samplesheet: $row"
+            }
+        }
     read_pairs_ch.view()
 
-    // Conditionally run leehom if read trimming is enabled
-    if (params.read_trimming) {
-        trimmed_reads_ch = leehom(read_pairs_ch)
-        trimmed_reads_ch.view()
-    } else {
-        trimmed_reads_ch = read_pairs_ch
-    }
-
     // Run FASTQC on read pairs
-    FASTQC(trimmed_reads_ch)
+    if (params.fastqc) {
+        FASTQC(read_pairs_ch)
+    }
 
     // Align reads to the indexed genome
     if (params.aligner == 'bwa-mem') {
-        align_ch = alignReadsBwaMem(trimmed_reads_ch, indexed_genome_ch.collect())
+        align_ch = alignReadsBwaMem(read_pairs_ch, indexed_genome_ch.collect())
     } else if (params.aligner == 'bwa-aln') {
-        align_ch = alignReadsBwaAln(trimmed_reads_ch, indexed_genome_ch.collect())
+        align_ch = alignReadsBwaAln(read_pairs_ch, indexed_genome_ch.collect())
     }
 
     // Sort BAM files
@@ -100,15 +107,32 @@ workflow {
     // Index the BAM files and collect the output channel
     indexed_bam_ch = indexBam(mark_ch)
 
-    // Create a channel from qsrVcfs
-    knownSites_ch = Channel.fromPath(params.qsrVcfs).filter { file -> file.getName().endsWith('.vcf.idx') }.map { file -> "--known-sites " + file.getBaseName() }.collect()
+    // Conditionally run mapDamage if degraded_dna parameter is set
+    if (params.degraded_dna) {
+        // Run mapDamage2 process only if degraded_dna is true
+        pre_mapDamage_ch = mapDamage2(indexed_bam_ch, indexed_genome_ch.collect())
+        mapDamage_ch = indexMapDamageBam(pre_mapDamage_ch)
+    } else {
+        // If degraded_dna is not true, just pass through the sorted BAM files
+        mapDamage_ch = indexed_bam_ch
+    }
 
-    // Run BQSR on indexed BAM files
-    bqsr_ch = baseRecalibrator(indexed_bam_ch, knownSites_ch, indexed_genome_ch.collect(), qsrc_vcf_ch.collect())
+    // Create a channel from qsrVcfs
+    knownSites_ch = Channel.fromPath(params.qsrVcfs)
+        .filter { file -> file.getName().endsWith('.vcf.tbi') }
+        .map { file -> "--known-sites " + file.getBaseName() }
+        .collect()
+
+    if (params.bqsr) {
+        // Run BQSR on indexed BAM files
+        bqsr_ch = baseRecalibrator(mapDamage_ch, knownSites_ch, indexed_genome_ch.collect(), qsrc_vcf_ch.collect())
+    } else {
+        // If BQSR is skipped, just pass through the mapDamage_ch channel
+        bqsr_ch = mapDamage_ch
+    }
 
     // Run HaplotypeCaller on BQSR files
-    gvcf_ch = haplotypeCaller(bqsr_ch, indexed_genome_ch.collect())
-        .collect()
+    gvcf_ch = haplotypeCaller(bqsr_ch, indexed_genome_ch.collect()).collect()
 
     // Now we map to create separate lists for sample IDs, VCF files, and index files
     all_gvcf_ch = gvcf_ch
@@ -129,15 +153,24 @@ workflow {
     if (params.variant_recalibration) {
         // Define a map of VCF files to resource options
         def resourceOptions = [
-            'Homo_sapiens_assembly38.known_indels': '--resource:dbsnp_indels,known=true,training=false,truth=false,prior=15.0',
-            'hapmap_3.3.hg38': '--resource:hapmap,known=false,training=false,truth=true,prior=15.0',
-            '1000G_omni2.5.hg38': '--resource:omni,known=false,training=true,truth=false,prior=12.0',
-            '1000G_phase1.snps.high_confidence.hg38': '--resource:1000G,known=true,training=true,truth=true,prior=10.0',
-            'Homo_sapiens_assembly38.dbsnp138': '--resource:dbsnp,known=true,training=false,truth=false,prior=2.0'
+            'Homo_sapiens_assembly38.known_indels': 'known=true,training=false,truth=false,prior=15.0',  // High-priority known indels, not used for training
+            'hapmap_3.3.hg38': 'known=false,training=false,truth=true,prior=15.0',  // Good for truth, not training
+            '1000G_omni2.5.hg38': 'known=false,training=true,truth=false,prior=12.0',  // Omni SNPs, used for training
+            '1000G_phase1.snps.high_confidence.hg38': 'known=true,training=true,truth=true,prior=10.0',  // High confidence SNPs, both for training and truth
+            'Homo_sapiens_assembly38.dbsnp138': 'known=true,training=false,truth=false,prior=2.0',  // dbSNP, known but not for training
+            'Mills_and_1000G_gold_standard.indels.hg38': 'known=true,training=false,truth=true,prior=12.0'  // Gold standard indels, good for truth (indels)
         ]
 
-        knownSitesArgs_ch = Channel.fromPath(params.qsrVcfs).map { file -> file }.filter { file.getName().endsWith('.vcf') }.map { file -> resourceOptions[file.getBaseName().replace('.vcf', '')] + " ./" + file.getBaseName() + ".vcf" }.filter { it != null }.collect()
-        knownSitesArgs_ch.view()
+        // Generate --resource arguments
+        knownSitesArgs_ch = Channel
+            .fromPath(params.qsrVcfs)
+            .filter { file -> file.getBaseName().endsWith('.vcf.gz') }
+            .map { file ->
+                def baseName = file.getBaseName().replace('.vcf.gz', '') // Remove .vcf extension
+                def resourceArgs = resourceOptions.get(baseName) ?: "" // Get attributes from resourceOptions
+                return "--resource:${baseName},${resourceArgs} ${file}" // Construct full argument with proper formatting
+            }
+            .collect()
 
         filtered_vcf_ch = variantRecalibrator(final_vcf_ch, knownSitesArgs_ch, indexed_genome_ch.collect(), qsrc_vcf_ch.collect())
     } else {
@@ -147,11 +180,20 @@ workflow {
     // Conditionally run identityAnalysis if identity_analysis is true
     if (params.identity_analysis) {
 
-        // Create psam_info_ch and collect the sample ID and sex info into a single channel
+        //Create psam_info_ch and collect the sample ID and sex info into a single channel
         psam_info_ch = Channel
             .fromPath(params.samplesheet)
             .splitCsv(sep: '\t')
-            .map { row -> tuple(row[0], row[3]) }
+            .map { row ->
+                if (row.size() == 4) {
+                    tuple(row[0], row[3])  // Sample ID and sex info when 4 columns are present
+                } else if (row.size() == 3) {
+                    tuple(row[0], row[2])    // Sample ID and null for sex info when 3 columns are present
+                } else {
+                    error "Unexpected row format in samplesheet: $row"  // Handle unexpected formats
+                }
+            }
+
 
         // Initialize a variable to hold the combined PSAM content, starting with the header
         def combined_psam_content = new StringBuilder("#IID\tSID\tPAT\tMAT\tSEX\n")
@@ -178,6 +220,8 @@ workflow {
             return combined_psam_file
         }
 
+        psam_file_ch.view()
+
         // Now pass the psam_info_ch to the identityAnalysis process
         identity_analysis_ch = identityAnalysis(filtered_vcf_ch, psam_file_ch)
         identity_analysis_ch.view()
@@ -185,12 +229,24 @@ workflow {
 }
 
 workflow FASTQC_only {
-    // Create channels and run processes in sequence
-    read_pairs_ch = Channel.fromPath(params.samplesheet).splitCsv(sep: '\t').map { row -> tuple(row[0], [row[1], row[2]]) }
+    // Set channel to gather read_pairs
+    read_pairs_ch = Channel
+        .fromPath(params.samplesheet)
+        .splitCsv(sep: '\t')
+        .map { row ->
+            if (row.size() == 4) {
+                tuple(row[0], [row[1], row[2]])
+            } else if (row.size() == 3) {
+                tuple(row[0], [row[1]])
+            } else {
+                error "Unexpected row format in samplesheet: $row"
+            }
+        }
     read_pairs_ch.view()
 
-    // Run FASTQC on read pairs
-    FASTQC(read_pairs_ch)
+    if (params.fastqc) {
+        FASTQC(read_pairs_ch)
+    }
 }
 
 workflow.onComplete {

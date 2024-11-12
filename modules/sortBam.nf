@@ -3,7 +3,7 @@
  */
 process sortBam {
 
-    label 'process_single'
+    label 'process_low'
     container 'variantvalidator/indexgenome:1.1.0'
 
     tag "$bamFile"

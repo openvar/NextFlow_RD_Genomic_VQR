@@ -23,7 +23,17 @@ process FASTQC {
     """
     echo "Running FASTQC"
     mkdir -p fastqc_${sample_id}_logs
-    fastqc ${reads[0]} ${reads[1]} -o fastqc_${sample_id}_logs
+
+    # Check the number of files in reads and run fastqc accordingly
+    if [ -f "${reads[0]}" ] && [ -f "${reads[1]}" ]; then
+        fastqc ${reads[0]} ${reads[1]} -o fastqc_${sample_id}_logs
+    elif [ -f "${reads[0]}" ]; then
+        fastqc ${reads[0]} -o fastqc_${sample_id}_logs
+    else
+        echo "No valid read files found for sample ${sample_id}"
+        exit 1
+    fi
+
     echo "FASTQC Complete"
     """
 }

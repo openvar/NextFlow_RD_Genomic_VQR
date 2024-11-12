@@ -1,11 +1,10 @@
 process variantRecalibrator {
 
-    label 'process_medium'
-    container 'variantvalidator/gatk4:4.3.0.0'
+    label 'process_low'
+    container 'broadinstitute/gatk:4.1.4.0'
 
     tag "$vcf"
 
-    // Publish VCF files to the specified directory
     publishDir("$params.outdir/VCF", mode: "copy")
 
     input:
@@ -19,10 +18,12 @@ process variantRecalibrator {
 
     script:
     def knownSitesArgsStr = knownSitesArgs.join(' ')
+    def degradedDna = params.degraded_dna == "true"
+
     """
     echo "Running VQSR"
 
-    if [[ -n params.genome_file ]]; then
+    if [[ -n "${params.genome_file}" ]]; then
         genomeFasta=\$(basename ${params.genome_file})
     else
         genomeFasta=\$(find -L . -name '*.fasta')
@@ -30,52 +31,88 @@ process variantRecalibrator {
 
     echo "Genome File: \${genomeFasta}"
 
-    # Rename the dictionary file to the expected name if it exists
     if [[ -e "\${genomeFasta}.dict" ]]; then
         mv "\${genomeFasta}.dict" "\${genomeFasta%.*}.dict"
     fi
 
-    # Run VariantRecalibrator for SNPs
-    gatk VariantRecalibrator \
-        -R "\${genomeFasta}" \
-        -V ${vcf} \
-        ${knownSitesArgsStr} \
-        -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR \
-        -mode SNP \
-        -tranches-file ${vcf.baseName}.recalibrated_SNP.tranches \
-        -O ${vcf.baseName}.recalibrated_SNP.recal
+    if ${degradedDna}; then
+        echo "Running VQSR for degraded DNA (1x coverage)"
+        # relaxed parameters for SNPs and INDELs
+        gatk VariantRecalibrator \
+            -R "\${genomeFasta}" \
+            -V ${vcf} \
+            ${knownSitesArgsStr} \
+            -an QD -an FS -an SOR \
+            -mode SNP \
+            -tranches-file ${vcf.baseName}.recalibrated_SNP.tranches \
+            -O ${vcf.baseName}.recalibrated_SNP.recal
+        # Apply VQSR for SNPs
+        gatk ApplyVQSR \
+            -R "\${genomeFasta}" \
+            -V ${vcf} \
+            --truth-sensitivity-filter-level 99.0 \
+            -tranches-file ${vcf.baseName}.recalibrated_SNP.tranches \
+            -recal-file ${vcf.baseName}.recalibrated_SNP.recal \
+            -mode SNP \
+            -O ${vcf.baseName}.output_SNP.vcf
+        # relaxed parameters for INDELs
+        gatk VariantRecalibrator \
+            -R "\${genomeFasta}" \
+            -V ${vcf} \
+            ${knownSitesArgsStr} \
+            -an QD -an FS -an SOR \
+            -mode INDEL \
+            -tranches-file ${vcf.baseName}.recalibrated_INDEL.tranches \
+            -O ${vcf.baseName}.recalibrated_INDEL.recal
+        # Apply VQSR for INDELs
+        gatk ApplyVQSR \
+            -R "\${genomeFasta}" \
+            -V ${vcf} \
+            --truth-sensitivity-filter-level 99.0 \
+            -tranches-file ${vcf.baseName}.recalibrated_INDEL.tranches \
+            -recal-file ${vcf.baseName}.recalibrated_INDEL.recal \
+            -mode INDEL \
+            -O ${vcf.baseName}.output_INDEL.vcf
+    else
+        echo "Running VQSR for standard DNA (10x+ coverage)"
+        # stricter parameters for SNPs and INDELs
+        gatk VariantRecalibrator \
+            -R "\${genomeFasta}" \
+            -V ${vcf} \
+            ${knownSitesArgsStr} \
+            -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR \
+            -mode SNP \
+            -tranches-file ${vcf.baseName}.recalibrated_SNP.tranches \
+            -O ${vcf.baseName}.recalibrated_SNP.recal
+        # Apply VQSR for SNPs
+        gatk ApplyVQSR \
+            -R "\${genomeFasta}" \
+            -V ${vcf} \
+            --truth-sensitivity-filter-level 99.0 \
+            -tranches-file ${vcf.baseName}.recalibrated_SNP.tranches \
+            -recal-file ${vcf.baseName}.recalibrated_SNP.recal \
+            -mode SNP \
+            -O ${vcf.baseName}.output_SNP.vcf
+        # stricter parameters for INDELs
+        gatk VariantRecalibrator \
+            -R "\${genomeFasta}" \
+            -V ${vcf} \
+            ${knownSitesArgsStr} \
+            -an QD -an DP -an FS -an SOR -an ReadPosRankSum -an MQRankSum \
+            -mode INDEL \
+            -tranches-file ${vcf.baseName}.recalibrated_INDEL.tranches \
+            -O ${vcf.baseName}.recalibrated_INDEL.recal
+        # Apply VQSR for INDELs
+        gatk ApplyVQSR \
+            -R "\${genomeFasta}" \
+            -V ${vcf} \
+            --truth-sensitivity-filter-level 99.0 \
+            -tranches-file ${vcf.baseName}.recalibrated_INDEL.tranches \
+            -recal-file ${vcf.baseName}.recalibrated_INDEL.recal \
+            -mode INDEL \
+            -O ${vcf.baseName}.output_INDEL.vcf
+    fi
 
-    # Apply VQSR for SNPs
-    gatk ApplyVQSR \
-        -R "\${genomeFasta}" \
-        -V ${vcf} \
-        --truth-sensitivity-filter-level 99.0 \
-        -tranches-file ${vcf.baseName}.recalibrated_SNP.tranches \
-        -recal-file ${vcf.baseName}.recalibrated_SNP.recal \
-        -mode SNP \
-        -O ${vcf.baseName}.output_SNP.vcf
-
-    # Run VariantRecalibrator for indels
-    gatk VariantRecalibrator \
-        -R "\${genomeFasta}" \
-        -V ${vcf} \
-        ${knownSitesArgsStr} \
-        -an QD -an DP -an FS -an SOR -an ReadPosRankSum -an MQRankSum \
-        -mode INDEL \
-        -tranches-file ${vcf.baseName}.recalibrated_INDEL.tranches \
-        -O ${vcf.baseName}.recalibrated_INDEL.recal
-
-    # Apply VQSR for indels
-    gatk ApplyVQSR \
-        -R "\${genomeFasta}" \
-        -V ${vcf} \
-        --truth-sensitivity-filter-level 99.0 \
-        -tranches-file ${vcf.baseName}.recalibrated_INDEL.tranches \
-        -recal-file ${vcf.baseName}.recalibrated_INDEL.recal \
-        -mode INDEL \
-        -O ${vcf.baseName}.output_INDEL.vcf
-
-    # Merge the recalibrated SNP and INDEL VCFs
     gatk MergeVcfs \
         -I ${vcf.baseName}.output_SNP.vcf \
         -I ${vcf.baseName}.output_INDEL.vcf \

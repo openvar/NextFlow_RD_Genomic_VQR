@@ -1,5 +1,5 @@
 process filterVCF {
-    label 'process_medium'
+    label 'process_low'
     container 'variantvalidator/gatk4:4.3.0.0'
 
     tag "$vcfFile"
@@ -17,6 +17,7 @@ process filterVCF {
 
     // Script section to run the process
     script:
+    def isDegradedDNA = params.degraded_dna ? 'true' : 'false'
     """
     # Print a message indicating the start of the process for the current sample
     echo "Running Variant Filtration for Sample: ${vcfFile}"
@@ -29,10 +30,27 @@ process filterVCF {
     # Set output VCF filename with _filtered.vcf instead of .filtered.vcf
     outputVcf="\$(basename ${vcfFile} .vcf)_filtered.vcf"
 
-    # Use GATK VariantFiltration to filter the input VCF file
-    gatk VariantFiltration -R "\${genomeFasta}" -V "${vcfFile}" -O "\${outputVcf}" \
-        --filter-expression "QD < 2.0" --filter-name "LowQD" \
-        --filter-expression "DP < 2" --filter-name "LowCoverage"
+    # If degraded DNA (1x coverage), use more relaxed filtering parameters
+    if [ "$isDegradedDNA" == "true" ]; then
+        echo "Running variant filtration for degraded DNA (1x coverage)"
+        gatk VariantFiltration -R "\${genomeFasta}" -V "${vcfFile}" -O "\${outputVcf}" \
+            --filter-expression "QD < 2.0" --filter-name "LowQD" \
+            --filter-expression "DP < 2" --filter-name "LowCoverage" \
+            --filter-expression "FS > 60.0" --filter-name "HighFS" \
+            --filter-expression "SOR > 3.0" --filter-name "HighSOR"
+
+    # If standard DNA (10x or more coverage), use stricter parameters
+    else
+        echo "Running variant filtration for standard DNA (10x+ coverage)"
+        gatk VariantFiltration -R "\${genomeFasta}" -V "${vcfFile}" -O "\${outputVcf}" \
+            --filter-expression "QD < 2.0" --filter-name "LowQD" \
+            --filter-expression "DP < 10" --filter-name "LowCoverage" \
+            --filter-expression "FS > 60.0" --filter-name "HighFS" \
+            --filter-expression "SOR > 3.0" --filter-name "HighSOR" \
+            --filter-expression "MQ < 40.0" --filter-name "LowMQ" \
+            --filter-expression "MQRankSum < -12.5" --filter-name "LowMQRankSum" \
+            --filter-expression "ReadPosRankSum < -8.0" --filter-name "LowReadPosRankSum"
+    fi
 
     # Print a message indicating the completion of variant filtration for the current sample
     echo "Variant Filtering for Sample: ${vcfFile} Complete"

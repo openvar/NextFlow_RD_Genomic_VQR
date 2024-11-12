@@ -1,6 +1,6 @@
 process identityAnalysis {
 
-    label 'process_medium'
+    label 'process_low'
     container 'variantvalidator/identity_analysis:0.0.1'
 
     tag "$vcfFile"
@@ -31,7 +31,7 @@ process identityAnalysis {
     plink2 --vcf filtered_${sample_id}.vcf --make-bed --split-par b38 --allow-extra-chr --update-sex ${psam_file} --out samples_${sample_id}
 
     # Step 5: Perform relatedness analysis with Plink using KING method
-    plink2 --bfile samples_${sample_id} --king-cutoff 0.185 --allow-extra-chr --out relatedness_${sample_id}
+    plink2 --bfile samples_${sample_id} --king-cutoff 0.354 --allow-extra-chr --out relatedness_${sample_id}
 
     # Step 6: Extract mitochondrial variants from the original VCF file
     bcftools view -r MT ${vcfFile}.gz -o mtDNA_variants_${sample_id}.vcf

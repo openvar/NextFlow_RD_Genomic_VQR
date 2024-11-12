@@ -2,7 +2,7 @@
 nextflow.enable.dsl = 2
 
 process haplotypeCaller {
-    label 'process_medium'
+    label 'process_low'
     container 'variantvalidator/gatk4:4.3.0.0'
 
     tag "$bamFile"
