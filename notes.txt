@@ -1,0 +1,128 @@
+docker run --rm -v $(pwd):/input -v $(pwd):/output quay.io/biocontainers/adapterremoval:2.3.4--pl5321h6dccd9a_0 \
+dapterRemoval --file1 /input/IMF-24-0088-01-01-A-LIMF00311_S17_L001_R1_001.fastq.gz --file2 /input/IMF-24-0088-01-01-A-LIMF00311_S17_L001_R2_001.fastq.gz --output1 /output/IMF-24-0088-01-01-A-LIMF00274_S4_L001_trimmed_R1.fastq --output2 /output/IMF-24-0088-01-01-A-LIMF00274_S4_L001_trimmed_R2.fastq --threads 8
+
+
+
+
+
+docker run --rm -v $(pwd):/input -v $(pwd):/output quay.io/biocontainers/adapterremoval:2.3.4--pl5321h6dccd9a_0 \
+AdapterRemoval \
+--file1 /input/IMF-24-0088-01-01-A-LIMF00311_S17_L001_R1_001.fastq \
+--file2 /input/IMF-24-0088-01-01-A-LIMF00311_S17_L001_R2_001.fastq \
+--basename /output/.fastq \
+--qualitybase 33 \
+--minlength 15 \
+--trimqualities \
+--minquality 15 \
+--collapse
+
+
+
+cat \
+.fastq.singleton.truncated \
+.fastq.collapsed \
+> \
+IMF-24-0088-01-01-A-LIMF00311_S17_combined.fastq
+
+
+
+cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
+--trim-n -q 15 -m 15 --cores=8 \
+-o IMF-24-0088-01-01-A-LIMF00311_S17_trimmed_ca.fastq \
+IMF-24-0088-01-01-A-LIMF00311_S17_combined.fastq
+
+
+
+
+
+
+
+docker run --rm -v $(pwd):/input -v $(pwd):/output quay.io/biocontainers/adapterremoval:2.3.4--pl5321h6dccd9a_0 \
+
+AdapterRemoval --file1 /input/HF3-Blood-stain-HUMAN-HF01-xx-DN-xxx-2019-127-PK_S1_R1.fastq \
+
+--file2 /input/HF3-Blood-stain-HUMAN-HF01-xx-DN-xxx-2019-127-PK_S1_R2.fastq \
+
+--basename /output/HF3-Blood-stain-HUMAN-HF01-xx-DN-xxx-2019-127-PK_S1 \
+
+--qualitybase 33 \
+
+--minlength 15 \
+
+--trimqualities \
+
+--minquality 15 \
+
+--collapse
+
+
+
+cat HF3-Blood-stain-HUMAN-HF01-xx-DN-xxx-2019-127-PK_S1.singleton.truncated HF3-Blood-stain-HUMAN-HF01-xx-DN-xxx-2019-127-PK_S1.collapsed > HF3-Blood-stain-HUMAN-HF01-xx-DN-xxx-2019-127-PK_S1_combined.fastq
+
+
+
+
+
+cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
+
+--trim-n -q 15 -m 15 --cores=8 \
+
+-o HF3-Blood-stain-HUMAN-HF01-xx-DN-xxx-2019-127-PK_S1_trimmed_ca.fastq \
+
+HF3-Blood-stain-HUMAN-HF01-xx-DN-xxx-2019-127-PK_S1_combined.fastq
+
+
+
+
+
+docker run --rm -v $(pwd):/input -v $(pwd):/output quay.io/biocontainers/adapterremoval:2.3.4--pl5321h6dccd9a_0 \
+
+AdapterRemoval --file1 /input/IMF-24-0088-01-01-A-LIMF00274_S4_L001_R1.fastq \
+
+--file2 /input/IMF-24-0088-01-01-A-LIMF00274_S4_L001_R2.fastq \
+
+--basename /output/IMF-24-0088-01-01-A-LIMF00274_S4_L001 \
+
+--qualitybase 33 \
+
+--minlength 15 \
+
+--trimqualities \
+
+--minquality 15 \
+
+--collapse
+
+
+
+cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
+
+--trim-n -q 15 -m 15 --cores=8 \
+
+-o IMF-24-0088-01-01-A-LIMF00274_S4_L001_combined_ca.fastq \
+
+IMF-24-0088-01-01-A-LIMF00274_S4_L001_combined
+
+
+
+
+
+
+
+
+
+
+
+cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
+
+-A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT \
+
+--trim-n -q 15 -m 15 --cores=8 \
+
+-o IMF-24-0088-01-01-A-LIMF00274_S4_L001_trimmed_ca_R1.fastq \
+
+-p IMF-24-0088-01-01-A-LIMF00274_S4_L001_trimmed_ca_R2.fastq \
+
+IMF-24-0088-01-01-A-LIMF00274_S4_L001_trimmed_R1.fastq \
+
+IMF-24-0088-01-01-A-LIMF00274_S4_L001_trimmed_R2.fastq
