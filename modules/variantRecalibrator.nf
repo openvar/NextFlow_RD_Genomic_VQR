@@ -1,7 +1,7 @@
 process variantRecalibrator {
 
     label 'process_low'
-    container 'broadinstitute/gatk:4.1.4.0'
+    container 'broadinstitute/gatk:4.6.1.0'
 
     tag "$vcf"
 

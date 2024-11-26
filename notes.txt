@@ -126,3 +126,27 @@ cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
 IMF-24-0088-01-01-A-LIMF00274_S4_L001_trimmed_R1.fastq \
 
 IMF-24-0088-01-01-A-LIMF00274_S4_L001_trimmed_R2.fastq
+
+
+
+docker run --rm -v "$(pwd):/data" -w /data quay.io/biocontainers/mapdamage2:2.2.2--pyr43hdfd78af_0 \
+    bash -c "
+
+    echo 'Running mapDamage2 for sample IMF_HF';
+
+    # Define genome file
+    genomeFasta='./genome.fasta';
+    echo 'Genome File: \${genomeFasta}';
+
+    # Create output directory
+    outputDir='./mapDamage_results_IMF_HF_sorted';
+    mkdir -p \${outputDir};
+
+    # Run mapDamage2
+    mapDamage -i IMF_HF_sorted_dedup.bam \
+              -r Homo_sapiens_assembly38.fasta \
+              --rescale \
+              -d \${outputDir};
+
+    echo 'mapDamage2 Complete for sample IMF_HF';
+    "

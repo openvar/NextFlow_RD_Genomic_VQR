@@ -46,6 +46,12 @@ phenotypicFeatures:
     - type:
         id: HP:0001336
         label: Hallucinations
+    -type:
+        id: HP:0002067
+        label: Bradykinesia
+    - type:
+        id: HP:0002322
+        label: Resting tremor
 
 # Parkinson's disease
 #genePanelFilter: {geneSymbols: ['ATP13A2', 'ATP1A3', 'C19orf12', 'CSF1R', 'DCTN1', 'DNAJC6', 'FBXO7', 'FTL', 'GBA', 'GCH1', 'GRN', 'LRRK2', 'LYST', 'MAPT', 'OPA3', 'PANK2', 'PARK7', 'PDGFB', 'PINK1', 'PLA2G6', 'PRKN', 'PRKRA', 'PTRHD1', 'RAB39B', 'SLC30A10', 'SLC39A14', 'SLC6A3', 'SNCA', 'SPG11', 'SPR', 'SYNJ1', 'TH', 'TUBB4A', 'VPS13A', 'VPS35', 'WDR45', 'ARSA', 'CHCHD2', 'COASY', 'TAF1', 'ANO3', 'ATP6AP2', 'ATXN2', 'ATXN3', 'C9orf72', 'EIF4G1', 'GIGYF2', 'GNAL', 'HTRA2', 'HTT', 'IPPK', 'JPH3', 'NR4A2', 'SGCE', 'SLC41A1', 'SNCAIP', 'TBP', 'THAP1', 'TOR1A', 'UCHL1', 'ATN1', 'ATXN1', 'ATXN2', 'ATXN3', 'C9orf72', 'HTT', 'JPH3', 'PPP2R2B', 'TBP']}

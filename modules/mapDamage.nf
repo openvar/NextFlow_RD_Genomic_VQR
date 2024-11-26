@@ -5,9 +5,6 @@ process mapDamage2 {
 
     tag "$bamFile"
 
-    // Publish mapDamage output to the specified directory
-    publishDir("$params.outdir/mapDamage", mode: "copy")
-
     input:
     tuple val(sample_id), file(bamFile), file(baiFile)
     path indexFiles
