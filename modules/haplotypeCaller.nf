@@ -90,10 +90,10 @@ process genotypeGVCFs {
     path indexFiles
 
     output:
-    tuple val(combined_sample_id), file("*_genotyped.vcf")
+    tuple val(combined_sample_id), file("*_genotyped.vcf"), file("*_genotyped.vcf.idx")
 
     script:
-    def merged_sample_id = combined_gvcf.baseName.replace('_combined.g.vcf', '')
+    def merged_sample_id = combined_gvcf.baseName
 
     """
     echo "Genotyping combined GVCF: ${combined_gvcf.baseName}"
@@ -114,5 +114,8 @@ process genotypeGVCFs {
     gatk GenotypeGVCFs -R "\${genomeFasta}" \
         -V ${combined_gvcf} \
         -O ${merged_sample_id}_genotyped.vcf
+
+    gatk IndexFeatureFile -F ${merged_sample_id}_genotyped.vcf
+
     """
 }

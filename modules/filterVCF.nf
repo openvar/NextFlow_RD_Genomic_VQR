@@ -8,7 +8,7 @@ process filterVCF {
     publishDir("$params.outdir/VCF", mode: "copy")
 
     input:
-    tuple val(sample_id), file(vcfFile)
+    tuple val(sample_id), file(vcfFile), file(vcfIndex)
     path indexFiles
 
     // Output channel for sample_id and filtered VCF files

@@ -8,7 +8,7 @@ process variantRecalibrator {
     publishDir("$params.outdir/VCF", mode: "copy")
 
     input:
-    tuple val(sample_id), file(vcf)
+    tuple val(sample_id), file(vcf), file(vcfIndex)
     val knownSitesArgs
     path genome
     path qsrc_vcf
