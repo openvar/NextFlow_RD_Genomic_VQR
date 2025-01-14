@@ -26,8 +26,9 @@ process markDuplicates {
 
     # Use Picard tools to mark duplicates in the input BAM file
     picard MarkDuplicates I=${bamFile} \\
-                            O="\${outputBam}" \\
-                            M="\${metricsFile}"
+                           O="\${outputBam}" \\
+                           M="\${metricsFile}" \\
+                           REMOVE_DUPLICATES=true
 
     echo "\${outputBam}"
 

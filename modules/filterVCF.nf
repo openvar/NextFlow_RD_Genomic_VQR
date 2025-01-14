@@ -32,26 +32,27 @@ process filterVCF {
 
     # If degraded DNA (3x coverage), use more relaxed filtering parameters, including MQ < 19 filter
     if [ "$isDegradedDNA" == "true" ]; then
-        echo "Running variant filtration for degraded DNA (1x coverage)"
-        gatk VariantFiltration -R "\${genomeFasta}" -V "${vcfFile}" -O "\${outputVcf}" \
-            --filter-expression "QD < 2.0" --filter-name "LowQD" \
-            --filter-expression "DP < 3" --filter-name "LowCoverage" \
-            --filter-expression "FS > 60.0" --filter-name "HighFS" \
-            --filter-expression "SOR > 3.0" --filter-name "HighSOR" \
-            --filter-expression "MQ < 19" --filter-name "LowMQ"
+        echo "Running variant filtration for degraded DNA (2 x coverage)"
+        gatk VariantFiltration -R "${genomeFasta}" -V "${vcfFile}" -O "${outputVcf}" \
+            --filter-name "LowCoverage" --filter-expression "DP < 5" \
+            --filter-name "HighFS" --filter-expression "FS > 60.0" \
+            --filter-name "HighSOR" --filter-expression "SOR > 3.0" \
+            --filter-name "LowMQ" --filter-expression "MQ < 40.0" \
+            --genotype-filter-name "LowGQ" --genotype-filter-expression "GQ < 20" \
+            --set-filtered-genotype-to-no-call \
 
     # If standard DNA (10x or more coverage), use stricter parameters
     else
         echo "Running variant filtration for standard DNA (10x+ coverage)"
-        gatk VariantFiltration -R "\${genomeFasta}" -V "${vcfFile}" -O "\${outputVcf}" \
-            --filter-expression "QD < 2.0" --filter-name "LowQD" \
-            --filter-expression "DP < 10" --filter-name "LowCoverage" \
-            --filter-expression "FS > 60.0" --filter-name "HighFS" \
-            --filter-expression "SOR > 3.0" --filter-name "HighSOR" \
-            --filter-expression "MQ < 40.0" --filter-name "LowMQ" \
-            --filter-expression "MQRankSum < -12.5" --filter-name "LowMQRankSum" \
-            --filter-expression "ReadPosRankSum < -8.0" --filter-name "LowReadPosRankSum"
+        gatk VariantFiltration -R "${genomeFasta}" -V "${vcfFile}" -O "${outputVcf}" \
+            --filter-name "LowCoverage" --filter-expression "DP < 10" \
+            --filter-name "HighFS" --filter-expression "FS > 60.0" \
+            --filter-name "HighSOR" --filter-expression "SOR > 3.0" \
+            --filter-name "LowMQ" --filter-expression "MQ < 40.0" \
+            --filter-name "LowMQRankSum" --filter-expression "MQRankSum < -12.5" \
+            --filter-name "LowReadPosRankSum" --filter-expression "ReadPosRankSum < -8.0"
     fi
+
 
     # Print a message indicating the completion of variant filtration for the current sample
     echo "Variant Filtering for Sample: ${vcfFile} Complete"

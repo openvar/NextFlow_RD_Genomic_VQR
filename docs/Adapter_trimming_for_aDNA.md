@@ -27,7 +27,27 @@ sample_combined.fastq
 ### Finally reomve any remaining adapter and trailing N bases
 ```shell
 cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
---trim-n -q 15 -m 15 --cores=8 \
+--trim-n -q 20 -m 30 --cores=16 \
 -o sample_trimmed_ca.fastq \
 sample_combined.fastq
+```
+
+```
+gunzip HF_combined_pretrimmed_ca.fastq && \
+cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
+--trim-n -q 20 -m 30 --cores=16 \
+-o HF_combined_trimmed_ca.fastq \
+HF_combined_pretrimmed_ca.fastq  && \
+bgzip HF_combined_trimmed_ca.fastq
+
+cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
+--trim-n -q 20 -m 30 --cores=8 \
+-o IMF_combined_trimmed_ca.fastq \
+IMF_combined_pretrimmed_ca.fastq && \
+
+cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
+--trim-n -q 20 -m 30 --cores=8 \
+-o IMF_HF_combined_trimmed_ca.fastq \
+IMF_HF_combined_pretrimmed_ca.fastq && \
+bgzip IMF_HF_combined_trimmed_ca.fastq
 ```

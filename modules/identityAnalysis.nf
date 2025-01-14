@@ -5,14 +5,14 @@ process identityAnalysis {
 
     tag "$vcfFile"
 
-    publishDir("$params.outdir/identity_analysis", mode: "copy")
+    publishDir("$params.outdir/IDENTITY_ANALYSIS", mode: "copy")
 
     input:
     tuple val(sample_id), file(vcfFile)              // Sample ID and VCF file
     file(psam_file)                                  // The pre-generated PSAM file
 
     output:
-    tuple val(sample_id), file("haplogroup*"), file("relatedness*")
+    path("relatedness_*")
 
     script:
     """
@@ -31,13 +31,7 @@ process identityAnalysis {
     plink2 --vcf filtered_${sample_id}.vcf --make-bed --split-par b38 --allow-extra-chr --update-sex ${psam_file} --out samples_${sample_id}
 
     # Step 5: Perform relatedness analysis with Plink using KING method
-    plink2 --bfile samples_${sample_id} --king-cutoff 0.354 --allow-extra-chr --out relatedness_${sample_id}
-
-    # Step 6: Extract mitochondrial variants from the original VCF file
-    bcftools view -r MT ${vcfFile}.gz -o mtDNA_variants_${sample_id}.vcf
-
-    # Step 7: Run HaploGrep2 for mitochondrial haplogroup identification
-    haplogrep classify --input mtDNA_variants_${sample_id}.vcf --output haplogroup_results_${sample_id}.txt --format vcf
+    plink2 --bfile samples_${sample_id} --king-cutoff 0.088 --make-king-table --allow-extra-chr --out relatedness_${sample_id}
 
     echo "Identity Analysis for Sample: ${vcfFile} Complete"
     """

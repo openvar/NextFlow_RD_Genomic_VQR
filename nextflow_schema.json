@@ -1,4 +1,3 @@
-```json
 {
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://raw.githubusercontent.com/openvar/NextFlow_RD_Genomic_VQR/main/nextflow_schema.json",
@@ -40,16 +39,31 @@
                     "default": "./results",
                     "format": "directory-path"
                 },
-                "index_genome": {
-                    "type": "boolean",
-                    "description": "Index the genome if not already done",
-                    "default": false
-                },
                 "aligner": {
                     "type": "string",
                     "description": "Aligner to use (bwa-mem or bwa-aln)",
                     "default": "bwa-mem",
                     "enum": ["bwa-mem", "bwa-aln"]
+                },
+                "fastqc": {
+                    "type": "boolean",
+                    "description": "Flag to indicate if FASTQC should be performed",
+                    "default": false
+                },
+                "index_genome": {
+                    "type": "boolean",
+                    "description": "Index the genome if not already done",
+                    "default": false
+                },
+                "degraded_dna": {
+                    "type": "boolean",
+                    "description": "Flag to indicate if degraded DNA analysis should be performed",
+                    "default": false
+                },
+                "bqsr": {
+                    "type": "boolean",
+                    "description": "Flag to indicate if Base Quality Score Recalibration should be performed",
+                    "default": false
                 },
                 "variant_recalibration": {
                     "type": "boolean",
@@ -78,4 +92,3 @@
         }
     ]
 }
-```

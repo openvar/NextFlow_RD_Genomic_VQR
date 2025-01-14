@@ -58,7 +58,7 @@ process combineGVCFs {
     path indexFiles
 
     output:
-    tuple val("${sample_ids.join('_')}"), file("*_combined.vcf")
+    tuple val("${sample_ids.join('_')}"), file("*_combined.vcf"), file("*_combined.vcf.idx")
 
     script:
     def merged_sample_id = "${sample_ids.join('_')}"
@@ -86,7 +86,7 @@ process genotypeGVCFs {
     tag "$combined_sample_id"
 
     input:
-    tuple val(combined_sample_id), file(combined_gvcf)
+    tuple val(combined_sample_id), file(combined_gvcf), file(combined_gvcf_idx)
     path indexFiles
 
     output:
@@ -114,8 +114,6 @@ process genotypeGVCFs {
     gatk GenotypeGVCFs -R "\${genomeFasta}" \
         -V ${combined_gvcf} \
         -O ${merged_sample_id}_genotyped.vcf
-
-    gatk IndexFeatureFile -F ${merged_sample_id}_genotyped.vcf
 
     """
 }
