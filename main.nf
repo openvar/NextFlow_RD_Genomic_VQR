@@ -4,7 +4,7 @@ nextflow.enable.dsl = 2
 // Print pipeline configuration
 log.info """\
     ============================================
-            Simple DNASeq Pipeline Configuration
+          DNASeq Pipeline Configuration
     ============================================
     samplesheet     : ${params.samplesheet}
     genome          : ${params.genome_file}
@@ -14,7 +14,8 @@ log.info """\
     output directory: ${params.outdir}
     fastqc          : ${params.fastqc}
     aligner         : ${params.aligner}
-    bgsr            : ${params.bqsr}
+    variant caller  : ${params.variant_caller}
+    bqsr            : ${params.bqsr}
     degraded_dna    : ${params.degraded_dna}
     variant_recalibration: ${params.variant_recalibration}
     identity_analysis: ${params.identity_analysis}
@@ -34,9 +35,8 @@ include { indexBam } from './modules/indexBam'
 if (params.bqsr) {
     include { baseRecalibrator } from './modules/BQSR'
 }
-include { haplotypeCaller } from './modules/haplotypeCaller'
-include { combineGVCFs } from './modules/haplotypeCaller'
-include { genotypeGVCFs } from './modules/haplotypeCaller'
+include { combineGVCFs } from './modules/processGVCFs'
+include { genotypeGVCFs } from './modules/processGVCFs'
 if (params.variant_recalibration) {
     include { variantRecalibrator } from './modules/variantRecalibrator'
 } else {
@@ -52,6 +52,12 @@ if (params.aligner == 'bwa-mem') {
 } else {
     error "Unsupported aligner: ${params.aligner}. Please specify 'bwa-mem' or 'bwa-aln'."
 }
+if (params.variant_caller == 'haplotype-caller') {
+    include { haplotypeCaller } from './modules/haplotypeCaller'
+} else {
+    error "Unsupported variant caller: ${params.variant_caller}. Please specify 'haplotype-caller'."
+}
+
 if (params.degraded_dna) {
     include { mapDamage2 } from './modules/mapDamage'
     include { indexMapDamageBam } from './modules/indexBam'
@@ -119,20 +125,23 @@ workflow {
 
     // Create a channel from qsrVcfs
     knownSites_ch = Channel.fromPath(params.qsrVcfs)
-        .filter { file -> file.getName().endsWith('.vcf.tbi') }
+        .filter { file -> file.getName().endsWith('.vcf.gz.tbi') || file.getName().endsWith('.vcf.idx') }
         .map { file -> "--known-sites " + file.getBaseName() }
         .collect()
 
     if (params.bqsr) {
         // Run BQSR on indexed BAM files
         bqsr_ch = baseRecalibrator(mapDamage_ch, knownSites_ch, indexed_genome_ch.collect(), qsrc_vcf_ch.collect())
+
     } else {
         // If BQSR is skipped, just pass through the mapDamage_ch channel
         bqsr_ch = mapDamage_ch
     }
 
     // Run HaplotypeCaller on BQSR files
-    gvcf_ch = haplotypeCaller(bqsr_ch, indexed_genome_ch.collect()).collect()
+    if (params.variant_caller == "haplotype-caller") {
+        gvcf_ch = haplotypeCaller(bqsr_ch, indexed_genome_ch.collect()).collect()
+    }
 
     // Now we map to create separate lists for sample IDs, VCF files, and index files
     all_gvcf_ch = gvcf_ch
@@ -158,20 +167,21 @@ workflow {
             '1000G_omni2.5.hg38': 'known=false,training=true,truth=false,prior=12.0',  // Omni SNPs, used for training
             '1000G_phase1.snps.high_confidence.hg38': 'known=true,training=true,truth=true,prior=10.0',  // High confidence SNPs, both for training and truth
             'Homo_sapiens_assembly38.dbsnp138': 'known=true,training=false,truth=false,prior=2.0',  // dbSNP, known but not for training
-            'Mills_and_1000G_gold_standard.indels.hg38': 'known=true,training=false,truth=true,prior=12.0'  // Gold standard indels, good for truth (indels)
+            'Mills_and_1000G_gold_standard.indels.hg38': 'known=true,training=true,truth=true,prior=12.0'  // Gold standard indels, good for truth (indels)
         ]
 
         // Generate --resource arguments
         knownSitesArgs_ch = Channel
             .fromPath(params.qsrVcfs)
-            .filter { file -> file.getBaseName().endsWith('.vcf.gz') }
+            .filter { file -> file.getName().endsWith('.vcf.gz') || file.getName().endsWith('.vcf') }
             .map { file ->
-                def baseName = file.getBaseName().replace('.vcf.gz', '') // Remove .vcf extension
+                def baseName = file.getName().endsWith('.vcf.gz')
+                    ? file.getName().replace('.vcf.gz', '')
+                    : file.getName().replace('.vcf', '') // Correctly remove both .vcf.gz and .vcf
                 def resourceArgs = resourceOptions.get(baseName) ?: "" // Get attributes from resourceOptions
-                return "--resource:${baseName},${resourceArgs} ${file}" // Construct full argument with proper formatting
+                return "--resource:${baseName},${resourceArgs} ${file}" // Construct the full argument with proper formatting
             }
             .collect()
-
         filtered_vcf_ch = variantRecalibrator(final_vcf_ch, knownSitesArgs_ch, indexed_genome_ch.collect(), qsrc_vcf_ch.collect())
     } else {
         filtered_vcf_ch = filterVCF(final_vcf_ch, indexed_genome_ch.collect())
@@ -219,12 +229,8 @@ workflow {
             // Pass the file itself to the channel
             return combined_psam_file
         }
-
-        psam_file_ch.view()
-
         // Now pass the psam_info_ch to the identityAnalysis process
         identity_analysis_ch = identityAnalysis(filtered_vcf_ch, psam_file_ch)
-        identity_analysis_ch.view()
     }
 }
 

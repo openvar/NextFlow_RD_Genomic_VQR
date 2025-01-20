@@ -74,7 +74,7 @@
                     "type": "boolean",
                     "description": "Flag to indicate if identity analysis should be performed",
                     "default": false
-                },
+                }
             },
             "required": [
                 "samplesheet",
@@ -82,7 +82,12 @@
                 "index_genome",
                 "genome_file",
                 "outdir",
-                "aligner"
+                "aligner",
+                "bqsr",
+                "fastqc",
+                "variant_recalibration",
+                "identity_analysis",
+                "degraded_dna"
             ]
         }
     },

@@ -1,3 +1,2 @@
-IMF	/media/e05374pc/T7Shield/NextFlow_RD_Genomic_VQR/data/samples/IMF_combined_trimmed_ca.fastq.gz	1
-HF	/media/e05374pc/T7Shield/NextFlow_RD_Genomic_VQR/data/samples/HF_combined_trimmed_ca.fastq.gz	1
-IMF_HF	/media/e05374pc/T7Shield/NextFlow_RD_Genomic_VQR/data/samples/IMF_HF_combined_trimmed_ca.fastq.gz	1
+NA12878	/home/e05374pc/PycharmProjects/NextFlow_RD_Genomic_VQR/data/samples/SRR1518253_1.fastq.gz	/home/e05374pc/PycharmProjects/NextFlow_RD_Genomic_VQR/data/samples/SRR1518253_2.fastq.gz	2
+

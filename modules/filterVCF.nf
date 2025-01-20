@@ -41,11 +41,11 @@ process filterVCF {
             --genotype-filter-name "LowGQ" --genotype-filter-expression "GQ < 20" \
             --set-filtered-genotype-to-no-call \
 
-    # If standard DNA (10x or more coverage), use stricter parameters
+    # If standard DNA use stricter parameters
     else
         echo "Running variant filtration for standard DNA (10x+ coverage)"
         gatk VariantFiltration -R "${genomeFasta}" -V "${vcfFile}" -O "${outputVcf}" \
-            --filter-name "LowCoverage" --filter-expression "DP < 10" \
+            --filter-name "LowCoverage" --filter-expression "DP < 5" \
             --filter-name "HighFS" --filter-expression "FS > 60.0" \
             --filter-name "HighSOR" --filter-expression "SOR > 3.0" \
             --filter-name "LowMQ" --filter-expression "MQ < 40.0" \
