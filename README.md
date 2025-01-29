@@ -1,14 +1,5 @@
 # NextFlow_RD_Genomic
 
-# Tasks
-
-- Create the directory data/qsr_vcfs
-- Populate with https://console.cloud.google.com/storage/browser/_details/genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf
-- Populate with https://console.cloud.google.com/storage/browser/_details/genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx
-- Make the modules/BSQR.nf module
-- Search main.nf for changes (note the channel creation and usage)
-- Update the nextflow.config
-
 ## Description
 
 A simple base Rare disease and germline genomics pipeline to test the effects of down-sampling on variant calling
