@@ -7,10 +7,6 @@ A simple base Rare disease and germline genomics pipeline to test the effects of
 ## Basic Overview
 Using the NextFlow workflow software to run the following pipeline
 
-### Pipeline
-Index genome > Fastqc analysis > Align reads > Downsample bam files > Sort bam > Mark duplicates > Index bam > 
-Call variants > Hard filter
-
 ## Setup
 To run the pipeline, we need to obtain 
 
