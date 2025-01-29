@@ -32,11 +32,30 @@ $ wget https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/
 ```bash
 $ cd ../samples
 $ wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR151/003/SRR1518253/SRR1518253_1.fastq.gz && \
-wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR151/003/SRR1518253/SRR1518253_2.fastq.gz && \
-wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR622/SRR622461/SRR622461_1.fastq.gz && \
-wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR622/SRR622461/SRR622461_2.fastq.gz && \
-wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR063/SRR063371/SRR063371_1.fastq.gz && \
-wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR063/SRR063371/SRR063371_1.fastq.gz
+wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR151/003/SRR1518253/SRR1518253_2.fastq.gz
+```
+
+- FASTQ for low coverage WGS
+```
+# Download the files using HTTPS
+wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR063/SRR063269/SRR063269_1.fastq.gz
+wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR063/SRR063279/SRR063279_2.fastq.gz
+wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR063/SRR063269/SRR063269_2.fastq.gz
+wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR063/SRR063277/SRR063277_2.fastq.gz
+wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR063/SRR063277/SRR063277_1.fastq.gz
+wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR063/SRR063279/SRR063279_1.fastq.gz
+
+# Concatenate the R1 files into NA19750_R1
+cat SRR063269_1.fastq.gz SRR063277_1.fastq.gz SRR063279_1.fastq.gz > NA19750_R1.fastq.gz
+
+# Concatenate the R2 files into NA19750_R2
+cat SRR063269_2.fastq.gz SRR063277_2.fastq.gz SRR063279_2.fastq.gz > NA19750_R2.fastq.gz
+```
+
+- FASTQ for NA19750 Exome
+```
+wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR071/SRR071178/SRR071178_1.fastq.gz
+wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR071/SRR071178/SRR071178_2.fastq.gz
 ```
 
 ## For VQSR and BQSR download the following files and indexes into the relevant directory
