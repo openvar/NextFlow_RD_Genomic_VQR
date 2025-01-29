@@ -1,1 +1,18 @@
 dxpy
+
+
+
+
+
+docker run --rm -v "$(pwd):/data" -w /data variantvalidator/gatk4:4.3.0.0 \
+    gatk --java-options "-Xmx3g -Xms3g" VariantFiltration \
+        -V IMF_HF_combined_genotyped.vcf \
+        -R Homo_sapiens_assembly38.fasta \
+        --filter-name "LowCoverage" --filter-expression "DP < 3" \
+        --filter-name "HighFS" --filter-expression "FS > 60.0" \
+        --filter-name "HighSOR" --filter-expression "SOR > 3.0" \
+        --filter-name "LowMQ" --filter-expression "MQ < 19.0" \
+        -O IMF_HF_combined_genotyped_filtered.vcf
+
+
+

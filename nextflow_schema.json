@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/YOUR_PIPELINE/master/nextflow_schema.json",
+    "$id": "https://raw.githubusercontent.com/openvar/NextFlow_RD_Genomic_VQR/main/nextflow_schema.json",
     "title": "Nextflow pipeline parameters",
-    "description": "This pipeline uses Nextflow and processes some kind of data. The JSON Schema was built using the nf-core pipeline schema builder.",
+    "description": "This pipeline uses Nextflow and processes exome or genome data. The JSON Schema was built using the nf-core pipeline schema builder.",
     "type": "object",
     "definitions": {
         "inputs_outputs": {
@@ -27,11 +27,6 @@
                     "description": "Quality Score Recalibration files directory",
                     "format": "directory-path"
                 },
-                "index_genome": {
-                    "type": "boolean",
-                    "description": "Index the genome",
-                    "default": false
-                },
                 "genome_file": {
                     "type": "string",
                     "description": "Genome fasta file",
@@ -43,6 +38,42 @@
                     "description": "local output directory",
                     "default": "./results",
                     "format": "directory-path"
+                },
+                "aligner": {
+                    "type": "string",
+                    "description": "Aligner to use (bwa-mem or bwa-aln)",
+                    "default": "bwa-mem",
+                    "enum": ["bwa-mem", "bwa-aln"]
+                },
+                "fastqc": {
+                    "type": "boolean",
+                    "description": "Flag to indicate if FASTQC should be performed",
+                    "default": false
+                },
+                "index_genome": {
+                    "type": "boolean",
+                    "description": "Index the genome if not already done",
+                    "default": false
+                },
+                "degraded_dna": {
+                    "type": "boolean",
+                    "description": "Flag to indicate if degraded DNA analysis should be performed",
+                    "default": false
+                },
+                "bqsr": {
+                    "type": "boolean",
+                    "description": "Flag to indicate if Base Quality Score Recalibration should be performed",
+                    "default": false
+                },
+                "variant_recalibration": {
+                    "type": "boolean",
+                    "description": "Flag to indicate if variant recalibration should be performed",
+                    "default": false
+                },
+                "identity_analysis": {
+                    "type": "boolean",
+                    "description": "Flag to indicate if identity analysis should be performed",
+                    "default": false
                 }
             },
             "required": [
@@ -50,7 +81,13 @@
                 "genome_index_files",
                 "index_genome",
                 "genome_file",
-                "outdir"
+                "outdir",
+                "aligner",
+                "bqsr",
+                "fastqc",
+                "variant_recalibration",
+                "identity_analysis",
+                "degraded_dna"
             ]
         }
     },
