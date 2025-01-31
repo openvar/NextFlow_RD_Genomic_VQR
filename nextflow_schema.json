@@ -11,6 +11,12 @@
             "description": "",
             "default": "",
             "properties": {
+                "platform": {
+                    "type": "string",
+                    "description": "Platform used to generate the data",
+                    "default": "local",
+                    "enum": ["local", "cloud"]
+                },
                 "samplesheet": {
                     "type": "string",
                     "description": "Samplesheet in tsv format",
@@ -74,9 +80,25 @@
                     "type": "boolean",
                     "description": "Flag to indicate if identity analysis should be performed",
                     "default": false
+                },
+                "max_memory": {
+                    "type": "string",
+                    "description": "Maximum memory allocation",
+                    "default": "8 GB"
+                },
+                "max_time": {
+                    "type": "string",
+                    "description": "Maximum time allocation",
+                    "default": "2 h"
+                },
+                "max_cpus": {
+                    "type": "integer",
+                    "description": "Maximum number of CPUs",
+                    "default": 4
                 }
             },
             "required": [
+                "platform",
                 "samplesheet",
                 "genome_index_files",
                 "index_genome",
@@ -87,7 +109,10 @@
                 "fastqc",
                 "variant_recalibration",
                 "identity_analysis",
-                "degraded_dna"
+                "degraded_dna",
+                "max_memory",
+                "max_time",
+                "max_cpus"
             ]
         }
     },

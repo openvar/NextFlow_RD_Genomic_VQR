@@ -1,5 +1,9 @@
 process combineGVCFs {
-    label 'process_medium'
+    if (params.platform == 'local') {
+        label 'process_low'
+    } else if (params.platform == 'cloud') {
+        label 'process_medium'
+    }
     container 'variantvalidator/gatk4:4.3.0.0'
     tag "${sample_ids.join('_')}" // Add a tag based on the sample IDs
 
@@ -31,7 +35,11 @@ process combineGVCFs {
 }
 
 process genotypeGVCFs {
-    label 'process_medium'
+    if (params.platform == 'local') {
+        label 'process_low'
+    } else if (params.platform == 'cloud') {
+        label 'process_medium'
+    }
     container 'variantvalidator/gatk4:4.3.0.0'
     tag "$combined_sample_id"
 

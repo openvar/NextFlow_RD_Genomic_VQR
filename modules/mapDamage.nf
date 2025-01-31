@@ -1,6 +1,10 @@
 process mapDamage2 {
 
-    label 'process_low'
+    if (params.platform == 'local') {
+        label 'process_low'
+    } else if (params.platform == 'cloud') {
+        label 'process_long'
+    }
     container 'quay.io/biocontainers/mapdamage2:2.2.2--pyr43hdfd78af_0'
 
     tag "$bamFile"

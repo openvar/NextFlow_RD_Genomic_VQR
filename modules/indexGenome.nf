@@ -4,7 +4,11 @@
  */
 process indexGenome {
 
-    label 'process_low'
+    if (params.platform == 'local') {
+        label 'process_low'
+    } else if (params.platform == 'cloud') {
+        label 'process_medium'
+    }
     container 'variantvalidator/indexgenome:1.1.0'
 
 

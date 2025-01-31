@@ -6,6 +6,7 @@ log.info """\
     ============================================
           DNASeq Pipeline Configuration
     ============================================
+    platform        : ${params.platform}
     samplesheet     : ${params.samplesheet}
     genome          : ${params.genome_file}
     genome index    : ${params.genome_index_files}

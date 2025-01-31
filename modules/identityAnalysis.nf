@@ -1,6 +1,10 @@
 process identityAnalysis {
 
-    label 'process_low'
+    if (params.platform == 'local') {
+        label 'process_low'
+    } else if (params.platform == 'cloud') {
+        label 'process_medium'
+    }
     container 'variantvalidator/identity_analysis:0.0.1'
 
     tag "$vcfFile"

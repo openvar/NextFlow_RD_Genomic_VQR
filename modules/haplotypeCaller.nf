@@ -2,7 +2,11 @@
 nextflow.enable.dsl = 2
 
 process haplotypeCaller {
-    label 'process_low'
+    if (params.platform == 'local') {
+        label 'process_low'
+    } else if (params.platform == 'cloud') {
+        label 'process_long'
+    }
     container 'variantvalidator/gatk4:4.3.0.0'
 
     tag "$bamFile"

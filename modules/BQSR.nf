@@ -1,6 +1,10 @@
 process baseRecalibrator {
 
-    label 'process_medium'
+    if (params.platform == 'local') {
+        label 'process_low'
+    } else if (params.platform == 'cloud') {
+        label 'process_medium'
+    }
     container 'broadinstitute/gatk:4.1.4.0'
 
     tag "$bamFile"

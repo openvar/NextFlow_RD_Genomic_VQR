@@ -1,6 +1,10 @@
 process alignReadsBwaAln {
 
-    label 'process_low'
+    if (params.platform == 'local') {
+        label 'process_low'
+    } else if (params.platform == 'cloud') {
+        label 'process_long'
+    }
     container 'variantvalidator/indexgenome:1.1.0'
 
     tag "$sample_id"
