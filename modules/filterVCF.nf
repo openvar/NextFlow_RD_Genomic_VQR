@@ -26,10 +26,17 @@ process filterVCF {
     # Print a message indicating the start of the process for the current sample
     echo "Running Variant Filtration for Sample: ${vcfFile}"
 
-    genomeFasta="\$(find -L . -name '*.fasta')"
+    if [[ -n "${params.genome_file}" ]]; then
+        genomeFasta=\$(basename ${params.genome_file})
+    else
+        genomeFasta=\$(find -L . -name '*.fasta')
+    fi
 
-    # Rename the dictionary file to the expected name
-    mv "\${genomeFasta}.dict" "\${genomeFasta%.*}.dict"
+    echo "Genome File: \${genomeFasta}"
+
+    if [[ -e "\${genomeFasta}.dict" ]]; then
+        mv "\${genomeFasta}.dict" "\${genomeFasta%.*}.dict"
+    fi
 
     # Set output VCF filename with _filtered.vcf instead of .filtered.vcf
     outputVcf="\$(basename ${vcfFile} .vcf)_filtered.vcf"

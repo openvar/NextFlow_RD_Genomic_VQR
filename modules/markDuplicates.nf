@@ -6,7 +6,7 @@ process markDuplicates {
     if (params.platform == 'local') {
         label 'process_low'
     } else if (params.platform == 'cloud') {
-        label 'process_medium'
+        label 'process_high'
     }
     container 'variantvalidator/indexgenome:1.1.0'
 
