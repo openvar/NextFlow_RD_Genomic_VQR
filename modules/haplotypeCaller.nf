@@ -5,7 +5,7 @@ process haplotypeCaller {
     if (params.platform == 'local') {
         label 'process_low'
     } else if (params.platform == 'cloud') {
-        label 'process_long'
+        label 'process_high'
     }
     container 'variantvalidator/gatk4:4.3.0.0'
 
