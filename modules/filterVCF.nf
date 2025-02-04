@@ -44,7 +44,7 @@ process filterVCF {
     # If degraded DNA (5x coverage), use more relaxed filtering parameters, including MQ < 40 filter
     if [ "$isDegradedDNA" == "true" ]; then
         echo "Running variant filtration for degraded DNA (2 x coverage)"
-        gatk VariantFiltration -R "${genomeFasta}" -V "${vcfFile}" -O "${outputVcf}" \
+        gatk VariantFiltration -R "\${genomeFasta}" -V "${vcfFile}" -O "\${outputVcf}" \
             --filter-name "LowCoverage" --filter-expression "DP < 5" \
             --filter-name "HighFS" --filter-expression "FS > 60.0" \
             --filter-name "HighSOR" --filter-expression "SOR > 3.0" \
@@ -55,7 +55,7 @@ process filterVCF {
     # If standard DNA use stricter parameters
     else
         echo "Running variant filtration for standard DNA (10x+ coverage)"
-        gatk VariantFiltration -R "${genomeFasta}" -V "${vcfFile}" -O "${outputVcf}" \
+        gatk VariantFiltration -R "\${genomeFasta}" -V "${vcfFile}" -O "\${outputVcf}" \
             --filter-name "LowCoverage" --filter-expression "DP < 5" \
             --filter-name "HighFS" --filter-expression "FS > 60.0" \
             --filter-name "HighSOR" --filter-expression "SOR > 3.0" \
