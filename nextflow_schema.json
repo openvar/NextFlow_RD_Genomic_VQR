@@ -103,6 +103,7 @@
                 "genome_index_files",
                 "index_genome",
                 "genome_file",
+                "qsrVcfs",
                 "outdir",
                 "aligner",
                 "bqsr",
