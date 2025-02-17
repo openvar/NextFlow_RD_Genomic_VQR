@@ -80,21 +80,6 @@
                     "type": "boolean",
                     "description": "Flag to indicate if identity analysis should be performed",
                     "default": false
-                },
-                "max_memory": {
-                    "type": "string",
-                    "description": "Maximum memory allocation",
-                    "default": "8 GB"
-                },
-                "max_time": {
-                    "type": "string",
-                    "description": "Maximum time allocation",
-                    "default": "2 h"
-                },
-                "max_cpus": {
-                    "type": "integer",
-                    "description": "Maximum number of CPUs",
-                    "default": 4
                 }
             },
             "required": [
