@@ -176,11 +176,9 @@ workflow {
             .fromPath(params.qsrVcfs)
             .filter { file -> file.getName().endsWith('.vcf.gz') || file.getName().endsWith('.vcf') }
             .map { file ->
-                def baseName = file.getName().endsWith('.vcf.gz')
-                    ? file.getName().replace('.vcf.gz', '')
-                    : file.getName().replace('.vcf', '') // Correctly remove both .vcf.gz and .vcf
+                def baseName = file.getName().replaceAll(/\.vcf(\.gz)?$/, '') // Remove .vcf.gz or .vcf
                 def resourceArgs = resourceOptions.get(baseName) ?: "" // Get attributes from resourceOptions
-                return "--resource:${baseName},${resourceArgs} ${file}" // Construct the full argument with proper formatting
+                return "--resource:${baseName},${resourceArgs} ${file.getName()}" // Only the filename, no full path
             }
             .collect()
         filtered_vcf_ch = variantRecalibrator(final_vcf_ch, knownSitesArgs_ch, indexed_genome_ch.collect(), qsrc_vcf_ch.collect())
