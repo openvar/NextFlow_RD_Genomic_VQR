@@ -10,19 +10,19 @@ Using the NextFlow workflow software to run the following pipeline
 ## Setup
 To run the pipeline, we need to obtain 
 
-- A genome build (GRCh38) - provided by the Broad institute
+- A genome build (GRCh38) - provided by the Broad institute - ***REQUIRED***
 ```bash
 $ cd data/genome
 $ wget https://storage.googleapis.com/gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
 ```
-- FastQ sample (for workflow development)
+- FastQ sample (for workflow development) - ***REQUIRED***
 ```bash
 $ cd ../samples
 $ wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR151/003/SRR1518253/SRR1518253_1.fastq.gz && \
 wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR151/003/SRR1518253/SRR1518253_2.fastq.gz
 ```
 
-- FASTQ for low coverage WGS
+- FASTQ for low coverage WGS - ***OPTIONAL***
 ```
 # Download the files using HTTPS
 wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR063/SRR063269/SRR063269_1.fastq.gz
@@ -39,13 +39,13 @@ cat SRR063269_1.fastq.gz SRR063277_1.fastq.gz SRR063279_1.fastq.gz > NA19750_lc_
 cat SRR063269_2.fastq.gz SRR063277_2.fastq.gz SRR063279_2.fastq.gz > NA19750_lc_wgs_R2.fastq.gz
 ```
 
-- FASTQ for NA19750 Exome
+- FASTQ for NA19750 Exome - ***OPTIONAL***
 ```
 wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR071/SRR071178/SRR071178_1.fastq.gz
 wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR071/SRR071178/SRR071178_2.fastq.gz
 ```
 
-## For VQSR and BQSR download the following files and indexes into the relevant directory
+## For VQSR and BQSR download the following files and indexes into the relevant directory - ***REQUIRED***
 ```bash
 $ wget https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/1000G_phase1.snps.high_confidence.hg38.vcf.gz && \
 wget https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz && \
