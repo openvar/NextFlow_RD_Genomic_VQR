@@ -25,7 +25,7 @@ process sortBam {
     outputBam="\$(basename ${bamFile} .bam)_filtered_sorted.bam"
 
     # Use samtools to filter the BAM file with a minimum MAPQ score of 30, and then sort it
-    samtools view -h -q 40 -b ${bamFile} | samtools sort -o \${outputBam} -
+    samtools view -h -q 30 -b ${bamFile} | samtools sort -o \${outputBam} -
 
     echo "\${outputBam}"
 
