@@ -47,16 +47,35 @@ wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR071/SRR071178/SRR071178_2.fastq.gz
 
 ## For VQSR and BQSR download the following files and indexes into the relevant directory - ***REQUIRED***
 ```bash
-$ wget https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/1000G_phase1.snps.high_confidence.hg38.vcf.gz && \
-wget https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz && \
-wget https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/hapmap_3.3.hg38.vcf.gz && \
-wget https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/1000G_omni2.5.hg38.vcf.gz && \
-wget https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf && \
-wget https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx && \
-wget https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/1000G_phase1.snps.high_confidence.hg38.vcf.gz.tbi && \
-wget https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz.tbi && \
-wget https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/hapmap_3.3.hg38.vcf.gz.tbi && \
-wget https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/1000G_omni2.5.hg38.vcf.gz.tbi
+# 1000G Omni 2.5
+wget -L -O 1000G_omni2.5.hg38.vcf.gz \
+  "https://zenodo.org/records/18267841/files/1000G_omni2.5.hg38.vcf.gz?download=1"
+wget -L -O 1000G_omni2.5.hg38.vcf.gz.tbi \
+  "https://zenodo.org/records/18267841/files/1000G_omni2.5.hg38.vcf.gz.tbi?download=1"
+
+# 1000G Phase 1 high-confidence SNPs
+wget -L -O 1000G_phase1.snps.high_confidence.hg38.vcf.gz \
+  "https://zenodo.org/records/18267841/files/1000G_phase1.snps.high_confidence.hg38.vcf.gz?download=1"
+wget -L -O 1000G_phase1.snps.high_confidence.hg38.vcf.gz.tbi \
+  "https://zenodo.org/records/18267841/files/1000G_phase1.snps.high_confidence.hg38.vcf.gz.tbi?download=1"
+
+# HapMap 3.3
+wget -L -O hapmap_3.3.hg38.vcf.gz \
+  "https://zenodo.org/records/18267841/files/hapmap_3.3.hg38.vcf.gz?download=1"
+wget -L -O hapmap_3.3.hg38.vcf.gz.tbi \
+  "https://zenodo.org/records/18267841/files/hapmap_3.3.hg38.vcf.gz.tbi?download=1"
+
+# dbSNP 138 (uncompressed VCF)
+wget -L -O Homo_sapiens_assembly38.dbsnp138.vcf \
+  "https://zenodo.org/records/18267841/files/Homo_sapiens_assembly38.dbsnp138.vcf?download=1"
+wget -L -O Homo_sapiens_assembly38.dbsnp138.vcf.idx \
+  "https://zenodo.org/records/18267841/files/Homo_sapiens_assembly38.dbsnp138.vcf.idx?download=1"
+
+# Mills + 1000G gold standard indels
+wget -L -O Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \
+  "https://zenodo.org/records/18267841/files/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz?download=1"
+wget -L -O Mills_and_1000G_gold_standard.indels.hg38.vcf.gz.tbi \
+  "https://zenodo.org/records/18267841/files/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz.tbi?download=1"
 ```
 
 ## Samplesheet
@@ -86,9 +105,6 @@ $ nextflow run -profile singularity main.nf
 ```
 Note: Refer to the nexrflow.config and nextflow_schema.json for parameter selection. 
 
-## Validating the pipeline
-See [https://genomics.viapath.co.uk/benchmark](https://genomics.viapath.co.uk/benchmark)
-
 ## DNANexus applet setup (A local applet for basic testing)
 - DNANexus Python Bindings [Documentation](https://github.com/dnanexus/dx-toolkit) 
 - [Install the app](https://documentation.dnanexus.com/downloads) 
@@ -107,4 +123,20 @@ $ pip install --upgrade dxpy
 ```bash
 $ dx select <your-project-name>
 $ dx build --nextflow
+```
+
+
+## GRCh37 Download
+```bash
+wget https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/p13.plusMT/hg19.p13.plusMT.fa.gz -O Homo_sapiens_assembly37.fasta.gz
+```
+
+## Syphilis genome
+```bash
+wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/008/745/GCA_000008745.1_ASM874v1/GCA_000008745.1_ASM874v1_genomic.fna.gz -O syphilis.fa.gz
+```
+
+## Concatenate gzipped files
+```bash
+zcat file1.gz file2.gz | gzip > concatenated_file.gz
 ```
