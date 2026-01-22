@@ -48,24 +48,34 @@ wget https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR071/SRR071178/SRR071178_2.fastq.gz
 ## For VQSR and BQSR download the following files and indexes into the relevant directory - ***REQUIRED***
 ```bash
 # 1000G Omni 2.5
-wget -L "https://zenodo.org/records/18267841/files/1000G_omni2.5.hg38.vcf.gz?download=1"
-wget -L "https://zenodo.org/records/18267841/files/1000G_omni2.5.hg38.vcf.gz.tbi?download=1"
+wget -L -O 1000G_omni2.5.hg38.vcf.gz \
+  "https://zenodo.org/records/18267841/files/1000G_omni2.5.hg38.vcf.gz?download=1"
+wget -L -O 1000G_omni2.5.hg38.vcf.gz.tbi \
+  "https://zenodo.org/records/18267841/files/1000G_omni2.5.hg38.vcf.gz.tbi?download=1"
 
 # 1000G Phase 1 high-confidence SNPs
-wget -L "https://zenodo.org/records/18267841/files/1000G_phase1.snps.high_confidence.hg38.vcf.gz?download=1"
-wget -L "https://zenodo.org/records/18267841/files/1000G_phase1.snps.high_confidence.hg38.vcf.gz.tbi?download=1"
+wget -L -O 1000G_phase1.snps.high_confidence.hg38.vcf.gz \
+  "https://zenodo.org/records/18267841/files/1000G_phase1.snps.high_confidence.hg38.vcf.gz?download=1"
+wget -L -O 1000G_phase1.snps.high_confidence.hg38.vcf.gz.tbi \
+  "https://zenodo.org/records/18267841/files/1000G_phase1.snps.high_confidence.hg38.vcf.gz.tbi?download=1"
 
 # HapMap 3.3
-wget -L "https://zenodo.org/records/18267841/files/hapmap_3.3.hg38.vcf.gz?download=1"
-wget -L "https://zenodo.org/records/18267841/files/hapmap_3.3.hg38.vcf.gz.tbi?download=1"
+wget -L -O hapmap_3.3.hg38.vcf.gz \
+  "https://zenodo.org/records/18267841/files/hapmap_3.3.hg38.vcf.gz?download=1"
+wget -L -O hapmap_3.3.hg38.vcf.gz.tbi \
+  "https://zenodo.org/records/18267841/files/hapmap_3.3.hg38.vcf.gz.tbi?download=1"
 
 # dbSNP 138 (uncompressed VCF)
-wget -L "https://zenodo.org/records/18267841/files/Homo_sapiens_assembly38.dbsnp138.vcf?download=1"
-wget -L "https://zenodo.org/records/18267841/files/Homo_sapiens_assembly38.dbsnp138.vcf.idx?download=1"
+wget -L -O Homo_sapiens_assembly38.dbsnp138.vcf \
+  "https://zenodo.org/records/18267841/files/Homo_sapiens_assembly38.dbsnp138.vcf?download=1"
+wget -L -O Homo_sapiens_assembly38.dbsnp138.vcf.idx \
+  "https://zenodo.org/records/18267841/files/Homo_sapiens_assembly38.dbsnp138.vcf.idx?download=1"
 
 # Mills + 1000G gold standard indels
-wget -L "https://zenodo.org/records/18267841/files/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz?download=1"
-wget -L "https://zenodo.org/records/18267841/files/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz.tbi?download=1"
+wget -L -O Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \
+  "https://zenodo.org/records/18267841/files/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz?download=1"
+wget -L -O Mills_and_1000G_gold_standard.indels.hg38.vcf.gz.tbi \
+  "https://zenodo.org/records/18267841/files/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz.tbi?download=1"
 ```
 
 ## Samplesheet
