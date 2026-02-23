@@ -13,6 +13,7 @@ log.info """\
     index genome    : ${params.index_genome}
     qsr truth vcfs  : ${params.qsrVcfs}
     output directory: ${params.outdir}
+    fastp           : ${params.fastp}
     fastqc          : ${params.fastqc}
     aligner         : ${params.aligner}
     variant caller  : ${params.variant_caller}
@@ -26,6 +27,9 @@ log.info """\
 // Conditionally include modules
 if (params.index_genome) {
     include { indexGenome } from './modules/indexGenome'
+}
+if (params.fastp) {
+    include { fastp } from './modules/fastp'
 }
 if (params.fastqc) {
     include { FASTQC } from './modules/FASTQC'
@@ -92,6 +96,13 @@ workflow {
             }
         }
     read_pairs_ch.view()
+
+    // Run fastp
+    if (params.fastp) {
+        fastp(read_pairs_ch)
+    }
+
+    return
 
     // Run FASTQC on read pairs
     if (params.fastqc) {
