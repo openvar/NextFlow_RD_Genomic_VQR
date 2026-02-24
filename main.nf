@@ -20,6 +20,7 @@ log.info """\
     degraded_dna    : ${params.degraded_dna}
     variant_recalibration: ${params.variant_recalibration}
     identity_analysis: ${params.identity_analysis}
+    trim_galore      : ${params.trim_galore}
     ============================================
 """.stripIndent()
 
@@ -29,6 +30,9 @@ if (params.index_genome) {
 }
 if (params.fastqc) {
     include { FASTQC } from './modules/FASTQC'
+}
+if (params.trim_galore) {
+    include { trimGalore } from './modules/trimGalore'
 }
 include { sortBam } from './modules/sortBam'
 include { markDuplicates } from './modules/markDuplicates'
@@ -98,11 +102,19 @@ workflow {
         FASTQC(read_pairs_ch)
     }
 
+    // Run Trim Galore! on read pairs
+    if (params.trim_galore) {
+        trim_galore_ch = trimGalore(read_pairs_ch)
+    } else {
+        // If trim_galore is not enabled, just pass through the original read pairs
+        trim_galore_ch = read_pairs_ch
+    }
+
     // Align reads to the indexed genome
     if (params.aligner == 'bwa-mem') {
-        align_ch = alignReadsBwaMem(read_pairs_ch, indexed_genome_ch.collect())
+        align_ch = alignReadsBwaMem(trim_galore_ch, indexed_genome_ch.collect())
     } else if (params.aligner == 'bwa-aln') {
-        align_ch = alignReadsBwaAln(read_pairs_ch, indexed_genome_ch.collect())
+        align_ch = alignReadsBwaAln(trim_galore_ch, indexed_genome_ch.collect())
     }
 
     // Sort BAM files

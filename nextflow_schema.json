@@ -80,6 +80,11 @@
                     "type": "boolean",
                     "description": "Flag to indicate if identity analysis should be performed",
                     "default": false
+                },
+                "trim_galore": {
+                    "type": "boolean",
+                    "description": "Flag to indicate whether Trim Galore! should be run",
+                    "default": false
                 }
             },
             "required": [
