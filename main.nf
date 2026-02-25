@@ -26,7 +26,12 @@ log.info """\
 
 // Conditionally include modules
 if (params.index_genome) {
-    include { indexGenome } from './modules/indexGenome'
+    if (params.aligner == 'minimap2') {
+        include { indexGenomeMinimap2 } from './modules/indexGenomeMinimap2'
+    }
+    else {
+        include { indexGenome } from './modules/indexGenome'
+    }
 }
 if (params.fastqc) {
     include { FASTQC } from './modules/FASTQC'
@@ -54,6 +59,8 @@ if (params.aligner == 'bwa-mem') {
     include { alignReadsBwaMem } from './modules/alignReadsBwaMem'
 } else if (params.aligner == 'bwa-aln') {
     include { alignReadsBwaAln } from './modules/alignReadsBwaAln'
+} else if (params.aligner == 'minimap2') {
+    include { alignReadsMinimap2; samToSortedBam } from './modules/alignReadsMinimap2'
 } else {
     error "Unsupported aligner: ${params.aligner}. Please specify 'bwa-mem' or 'bwa-aln'."
 }
@@ -72,8 +79,12 @@ workflow {
 
     // User decides to index genome or not
     if (params.index_genome){
-        // Flatten as is of format [fasta, [rest of files..]]
-        indexed_genome_ch = indexGenome(params.genome_file).flatten()
+        if (params.aligner == 'bwa-mem' || params.aligner == 'bwa-aln') {
+            // Flatten as is of format [fasta, [rest of files..]]
+            indexed_genome_ch = indexGenome(params.genome_file).flatten()
+        } else if (params.aligner == 'minimap2') {
+            indexed_genome_ch = indexGenomeMinimap2(params.genome_file)
+        }
     }
     else {
         indexed_genome_ch = Channel.fromPath(params.genome_index_files)
@@ -115,10 +126,17 @@ workflow {
         align_ch = alignReadsBwaMem(trim_galore_ch, indexed_genome_ch.collect())
     } else if (params.aligner == 'bwa-aln') {
         align_ch = alignReadsBwaAln(trim_galore_ch, indexed_genome_ch.collect())
+    } else if (params.aligner == 'minimap2') {
+        align_sam_ch = alignReadsMinimap2(trim_galore_ch, indexed_genome_ch.collect())
+        align_ch = samToSortedBam(align_sam_ch)
+    } else {
+        error "Unsupported aligner: ${params.aligner}. Please specify 'bwa-mem', 'bwa-aln', or 'minimap2'."
     }
 
     // Sort BAM files
-    sort_ch = sortBam(align_ch)
+    if (params.aligner == 'bwa-mem' || params.aligner == 'bwa-aln') {
+        sort_ch = sortBam(align_ch)
+    }
 
     // Mark duplicates in BAM files
     mark_ch = markDuplicates(sort_ch)
