@@ -32,7 +32,8 @@ if (params.fastp) {
     include { fastp } from './modules/fastp'
 }
 if (params.fastqc) {
-    include { FASTQC } from './modules/FASTQC'
+    include { FASTQC as FASTQC_RAW } from './modules/FASTQC'
+    include { FASTQC as FASTQC_TRIMMED } from './modules/FASTQC'
 }
 include { sortBam } from './modules/sortBam'
 include { markDuplicates } from './modules/markDuplicates'
@@ -97,24 +98,52 @@ workflow {
         }
     read_pairs_ch.view()
 
-    // Run fastp
-    if (params.fastp) {
-        fastp(read_pairs_ch)
+    // Run FASTQC on read pairs before fastp
+    if (params.fastqc) {
+    raw_fastqc_input = read_pairs_ch.map { id, reads ->
+        tuple(id, "beforefastp", reads)
     }
 
-    return
+    FASTQC_RAW(raw_fastqc_input)
+    }
 
-    // Run FASTQC on read pairs
-    if (params.fastqc) {
-        FASTQC(read_pairs_ch)
+    // Run fastp
+    if (params.fastp) {
+        trimmed_reads = fastp(read_pairs_ch)
+    }
+
+    // Run FASTQC on read pairs after fastp
+    if (params.fastqc && params.fastp) {
+    trimmed_fastqc_input = trimmed_reads.map { id, reads ->
+        tuple(id, "afterfastp", reads)
+    }
+
+    FASTQC_TRIMMED(trimmed_fastqc_input)
+    }
+
+    // Use the fastp results for alignemnt if fastp is enabled 
+    if (params.fastp) {
+        read_pairs_for_alignment = fastp.out.fastp_fastqs
+
+        read_pairs_for_alignment.view { id, reads ->
+            log.info "ALIGNING (TRIMMED) -> ${id} | ${reads}"
+        }
+    } else {
+        read_pairs_for_alignment = read_pairs_ch
+
+        read_pairs_for_alignment.view { id, reads ->
+            log.info "ALIGNING (RAW) -> ${id} | ${reads}"
+        }
     }
 
     // Align reads to the indexed genome
     if (params.aligner == 'bwa-mem') {
-        align_ch = alignReadsBwaMem(read_pairs_ch, indexed_genome_ch.collect())
+        align_ch = alignReadsBwaMem(read_pairs_for_alignment, indexed_genome_ch.collect())
     } else if (params.aligner == 'bwa-aln') {
-        align_ch = alignReadsBwaAln(read_pairs_ch, indexed_genome_ch.collect())
+        align_ch = alignReadsBwaAln(read_pairs_for_alignment, indexed_genome_ch.collect())
     }
+
+    return
 
     // Sort BAM files
     sort_ch = sortBam(align_ch)

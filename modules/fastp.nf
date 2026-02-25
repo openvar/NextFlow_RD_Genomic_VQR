@@ -16,7 +16,8 @@ process fastp {
     tuple val(sample_id), path(reads)
 
     output:
-    path "fastp_${sample_id}_output/*"
+    tuple val(sample_id), path("fastp_${sample_id}_output/out.${sample_id}.R*.fastq.gz"), emit: fastp_fastqs
+    // Put in html and json reports 
 
     script:
     """
